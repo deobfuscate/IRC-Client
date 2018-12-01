@@ -1,15 +1,18 @@
 ﻿using System;
+using System.Collections.Generic;
 using System.ComponentModel;
 using System.IO;
 using System.Net.Sockets;
 using System.Windows.Forms;
 
-namespace IRC_Client{
+namespace IRC_Client
+{
     public partial class frmServer : Form
     {
         private StreamWriter writer;
         private static bool isConnected = false;
         private const char PREFIX = '/';
+        private readonly List<string> SERVER_CODES = new List<string>() { "001", "002", "003", "004", "005", "251", "252", "254", "255", "375", "372" };
         public delegate void InvokeDelegate(string arg);
 
         public frmServer()
@@ -19,7 +22,7 @@ namespace IRC_Client{
             //webBrowser1.Navigate("about:blank");
             webBrowser1.DocumentText = "0";
             webBrowser1.Document.OpenNew(true);
-            webBrowser1.Document.Write("<html><head><link rel='stylesheet' type='text/css' href='file://"+ Directory.GetCurrentDirectory() + "/styles.css'></head><body>\n");
+            webBrowser1.Document.Write("<html><head><link rel='stylesheet' type='text/css' href='file://" + Directory.GetCurrentDirectory() + "/styles.css'></head><body>\n");
         }
 
         private void button1_Click(object sender, EventArgs e)
@@ -30,7 +33,7 @@ namespace IRC_Client{
 
         private void CallbackMethod(IAsyncResult ar)
         {
-            webBrowser1.BeginInvoke(new InvokeDelegate(writeLine),"Connecting...");
+            webBrowser1.BeginInvoke(new InvokeDelegate(writeLine), "Connecting...");
             try
             {
                 isConnected = false;
@@ -40,7 +43,7 @@ namespace IRC_Client{
                 {
                     tcpclient.EndConnect(ar);
                     isConnected = true;
-                    
+
                     NetworkStream stream = tcpclient.GetStream();
                     StreamReader reader = new StreamReader(stream);
                     writer = new StreamWriter(stream);
@@ -49,7 +52,7 @@ namespace IRC_Client{
                     writer.Flush();
                     writer.WriteLine("NICK UniqueNickname");
                     writer.Flush();
-                    while(true)
+                    while (true)
                     {
                         while ((inputLine = reader.ReadLine()) != null)
                         {
@@ -67,23 +70,13 @@ namespace IRC_Client{
                             }
                             if (splitInput[1] == "NOTICE")
                             {
-                                String tmp = "";
-                                for (int i = 2; i < splitInput.Length; i++)
-                                    tmp += " " + splitInput[i];
-                                tmp = tmp.TrimStart();
-                                if (tmp[0] == ':') tmp = tmp.Remove(0, 1);  //remove ':'
-                                writeLineA("-" + splitInput[0] + "- " + tmp);
+                                writeLineA($"-{splitInput[0].Substring(1)}- {formatString(splitInput)}");
                             }
                             if (inputLine.Length > 1)
-                            { 
-                                if (splitInput[1] == "001" | splitInput[1] == "002" | splitInput[1] == "003" | splitInput[1] == "004" | splitInput[1] == "005" | splitInput[1] == "251" | splitInput[1] == "252" | splitInput[1] == "254" | splitInput[1] == "255" | splitInput[1] == "005" | splitInput[1] == "375" | splitInput[1] == "372")
+                            {
+                                if (SERVER_CODES.Contains(splitInput[1]))
                                 {
-                                    string tmp = "";
-                                    for (int i = 3; i < splitInput.Length; i++)
-                                        tmp += " " + splitInput[i];
-                                    tmp = tmp.TrimStart();
-                                    if (tmp[0] == ':') tmp = tmp.Remove(0, 1);  //remove ':'
-                                    writeLineA("-Server- " + tmp);
+                                    writeLineA($"-Server- {formatString(splitInput)}");
                                 }
                             }
                         }
@@ -136,14 +129,26 @@ namespace IRC_Client{
         {
             //webBrowser1.Document.Write("<html><head><link rel='stylesheet' type='text/css' href='styles.css'></head><body>\n");
         }
+
         private void writeLine(string text)
         {
-            webBrowser1.Document.Write(text+"<br>\n");
+            webBrowser1.Document.Write(text + "<br>\n");
             webBrowser1.Document.Window.ScrollTo(0, webBrowser1.Document.Body.ScrollRectangle.Height);
         }
+
         private void writeLineA(string text)
         {
             webBrowser1.BeginInvoke(new InvokeDelegate(writeLine), text);
+        }
+
+        private string formatString(string[] input)
+        {
+            string tmp = "";
+            for (int i = 3; i < input.Length; i++)
+                tmp += " " + input[i];
+            tmp = tmp.TrimStart();
+            if (tmp[0] == ':') tmp = tmp.Remove(0, 1);  //remove ':'
+            return tmp;
         }
     }
 }
