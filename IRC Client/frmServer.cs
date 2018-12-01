@@ -1,6 +1,5 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.ComponentModel;
 using System.IO;
 using System.Net.Sockets;
 using System.Windows.Forms;
@@ -92,11 +91,6 @@ namespace IRC_Client
                 Console.WriteLine(ex);
                 writeLine("<- <span color='red'>DISCONNECTED</span>");
             }
-        }
-
-        private void work(object sender, DoWorkEventArgs e)
-        {
-
         }
 
         private void button2_Click(object sender, EventArgs e)
