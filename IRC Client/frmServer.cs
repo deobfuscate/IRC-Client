@@ -96,11 +96,11 @@ namespace IRC_Client
             }
         }
 
-        private void button2_Click(object sender, EventArgs e)
+        public void send(string input)
         {
-            if (textBox2.Text[0] == PREFIX)
+            if (input[0] == PREFIX)
             {
-                String cmd = textBox2.Text.Remove(0, 1);
+                String cmd = input.Remove(0, 1);
                 String[] parts = cmd.Split(' ');
                 switch (parts[0])
                 {
@@ -111,15 +111,13 @@ namespace IRC_Client
                     default:
                         break;
                 }
-                textBox2.Clear();
             }
             else
             {
-                writer.WriteLine(textBox2.Text);
+                writer.WriteLine(input);
                 writer.Flush();
-                Console.WriteLine("-> " + textBox2.Text);
-                textBox2.Clear();
             }
+            Console.WriteLine("-> " + input);
         }
 
         private void writeLine(string text)
@@ -155,10 +153,6 @@ namespace IRC_Client
                 reader.Close();
             }
             return result;
-        }
-        public void testing(string value)
-        {
-            MessageBox.Show(value);
         }
     }
 }
