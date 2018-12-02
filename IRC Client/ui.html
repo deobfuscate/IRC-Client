@@ -1,0 +1,28 @@
+﻿<html>
+<head>
+    <style>
+        body {
+            background-color: black;
+            color: white;
+            font-family: Courier New, Courier, Lucida Sans Typewriter, Lucida Typewriter, monospace;
+        }
+        .notice_nick {
+            color:#808080;
+        }
+    </style>
+    <script language="JavaScript">
+        var cs = window.external;
+        function send() {
+            if (event.keyCode == 13) {
+                var tmp = document.getElementById('input').value;
+                document.getElementById('input').value = '';
+                cs.SomeCSMethod(tmp);
+            }
+        }
+    </script>
+</head>
+<body>
+    <div id="main"></div>
+    <input id="input" type="text" onKeyDown="send()" />
+</body>
+</html>
