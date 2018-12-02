@@ -2,13 +2,10 @@
 using System.Collections.Generic;
 using System.IO;
 using System.Net.Sockets;
-using System.Reflection;
-using System.Runtime.InteropServices;
 using System.Windows.Forms;
 
 namespace IRC_Client
 {
-    [ComVisible(true)]
     public partial class frmServer : Form
     {
         private StreamWriter writer;
@@ -22,11 +19,9 @@ namespace IRC_Client
             InitializeComponent();
             //Control.CheckForIllegalCrossThreadCalls = false;
             //webBrowser1.Navigate("about:blank");
-            webBrowser1.ObjectForScripting = this;
             webBrowser1.DocumentText = "0";
             webBrowser1.Document.OpenNew(true);
-            //webBrowser1.Document.Write("<html><head><link rel='stylesheet' type='text/css' href='file://" + Directory.GetCurrentDirectory() + "/styles.css'></head><body><div id='main'></div><p>What a wild ride....</p></body></html>\n");
-            webBrowser1.Document.Write(ReadEmbeddedFile("ui.html"));
+            webBrowser1.Document.Write("<html><head><link rel='stylesheet' type='text/css' href='file://" + Directory.GetCurrentDirectory() + "/styles.css'></head><body>\n");
         }
 
         private void button1_Click(object sender, EventArgs e)
@@ -56,7 +51,7 @@ namespace IRC_Client
                     writer.Flush();
                     writer.WriteLine("NICK UniqueNickname");
                     writer.Flush();
-                    while(true)
+                    while (true)
                     {
                         while ((inputLine = reader.ReadLine()) != null)
                         {
@@ -74,13 +69,13 @@ namespace IRC_Client
                             }
                             if (splitInput[1] == "NOTICE")
                             {
-                                writeLineA($"-<span class=\"notice_nick\">{splitInput[0].Substring(1)}</span>- {formatString(splitInput)}");
+                                writeLineA($"-{splitInput[0].Substring(1)}- {formatString(splitInput)}");
                             }
                             if (inputLine.Length > 1)
                             {
                                 if (SERVER_CODES.Contains(splitInput[1]))
                                 {
-                                    writeLineA($"-<span class=\"notice_nick\">Server</span>- {formatString(splitInput)}");
+                                    writeLineA($"-Server- {formatString(splitInput)}");
                                 }
                             }
                         }
@@ -124,12 +119,14 @@ namespace IRC_Client
             }
         }
 
+        private void webBrowser1_DocumentCompleted(object sender, WebBrowserDocumentCompletedEventArgs e)
+        {
+            //webBrowser1.Document.Write("<html><head><link rel='stylesheet' type='text/css' href='styles.css'></head><body>\n");
+        }
+
         private void writeLine(string text)
         {
-            //webBrowser1.Document.Write(text + "<br>\n");
-            HtmlElement tmp = webBrowser1.Document.CreateElement("span");
-            tmp.InnerHtml = text + "<br>\n";
-            webBrowser1.Document.GetElementById("main").AppendChild(tmp);
+            webBrowser1.Document.Write(text + "<br>\n");
             webBrowser1.Document.Window.ScrollTo(0, webBrowser1.Document.Body.ScrollRectangle.Height);
         }
 
@@ -146,23 +143,6 @@ namespace IRC_Client
             tmp = tmp.TrimStart();
             if (tmp[0] == ':') tmp = tmp.Remove(0, 1);  //remove ':'
             return tmp;
-        }
-
-        private string ReadEmbeddedFile(string file)
-        {
-            string result;
-            using (Stream stream = Assembly.GetExecutingAssembly().GetManifestResourceStream($"IRC_Client.{file}"))
-            using (StreamReader reader = new StreamReader(stream))
-            {
-                result = reader.ReadToEnd();
-                reader.Close();
-            }
-            return result;
-        }
-
-        public void SomeCSMethod(string value)
-        {
-            MessageBox.Show(value);
         }
     }
 }
