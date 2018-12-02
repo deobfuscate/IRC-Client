@@ -30,12 +30,6 @@ namespace IRC_Client
             webBrowser1.Document.Window.ScrollTo(0, webBrowser1.Document.Body.ScrollRectangle.Height);
         }
 
-        private void button1_Click(object sender, EventArgs e)
-        {
-            TcpClient irc = new TcpClient();
-            irc.BeginConnect("irc.quakenet.org", 6667, CallbackMethod, irc);
-        }
-
         private void CallbackMethod(IAsyncResult ar)
         {
             webBrowser1.BeginInvoke(new InvokeDelegate(writeLine), "Connecting...");
