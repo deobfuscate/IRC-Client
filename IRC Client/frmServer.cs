@@ -18,11 +18,16 @@ namespace IRC_Client
         public frmServer()
         {
             InitializeComponent();
-            //Control.CheckForIllegalCrossThreadCalls = false;
-            //webBrowser1.Navigate("about:blank");
             webBrowser1.DocumentText = "0";
             webBrowser1.Document.OpenNew(true);
             webBrowser1.Document.Write(ReadEmbeddedFile("ui.html"));
+            // Load external CSS file
+            HtmlElement css = webBrowser1.Document.CreateElement("link");
+            css.SetAttribute("rel", "stylesheet");
+            css.SetAttribute("type", "text/css");
+            css.SetAttribute("href", $"file://{Directory.GetCurrentDirectory()}/styles.css");
+            webBrowser1.Document.GetElementsByTagName("head")[0].AppendChild(css);
+            webBrowser1.Document.Window.ScrollTo(0, webBrowser1.Document.Body.ScrollRectangle.Height);
         }
 
         private void button1_Click(object sender, EventArgs e)
