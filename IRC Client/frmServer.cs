@@ -3,10 +3,12 @@ using System.Collections.Generic;
 using System.IO;
 using System.Net.Sockets;
 using System.Reflection;
+using System.Runtime.InteropServices;
 using System.Windows.Forms;
 
 namespace IRC_Client
 {
+    [ComVisible(true)]
     public partial class frmServer : Form
     {
         private StreamWriter writer;
@@ -20,6 +22,7 @@ namespace IRC_Client
             InitializeComponent();
             webBrowser1.DocumentText = "0";
             webBrowser1.Document.OpenNew(true);
+            webBrowser1.ObjectForScripting = this;
             webBrowser1.Document.Write(ReadEmbeddedFile("ui.html"));
             // Load external CSS file
             HtmlElement css = webBrowser1.Document.CreateElement("link");
@@ -152,6 +155,10 @@ namespace IRC_Client
                 reader.Close();
             }
             return result;
+        }
+        public void testing(string value)
+        {
+            MessageBox.Show(value);
         }
     }
 }

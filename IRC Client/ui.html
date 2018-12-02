@@ -1,8 +1,19 @@
 <html>
 <head>
+    <script language="JavaScript">
+        var cs = window.external;
+        function send() {
+            // Enter key pressed
+            if (event.keyCode == 13) {
+                var tmp = document.getElementById('input').value;
+                document.getElementById('input').value = '';
+                cs.testing(tmp);
+            }
+        }
+    </script>
 </head>
 <body>
     <div id="main"></div>
-    <p>Placeholder</p>
+    <input id="input" type="text" onKeyDown="send()">
 </body>
 </html>
