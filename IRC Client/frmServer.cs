@@ -30,7 +30,7 @@ namespace IRC_Client
             css.SetAttribute("type", "text/css");
             css.SetAttribute("href", $"file://{Directory.GetCurrentDirectory()}/styles.css");
             webBrowser1.Document.GetElementsByTagName("head")[0].AppendChild(css);
-            webBrowser1.Document.Window.ScrollTo(0, webBrowser1.Document.Body.ScrollRectangle.Height);
+            //webBrowser1.Document.Window.ScrollTo(0, webBrowser1.Document.Body.ScrollRectangle.Height);
         }
 
         private void CallbackMethod(IAsyncResult ar)
@@ -98,6 +98,7 @@ namespace IRC_Client
 
         public void send(string input)
         {
+            if (input == null) return;
             if (input[0] == PREFIX)
             {
                 String cmd = input.Remove(0, 1);
@@ -114,10 +115,17 @@ namespace IRC_Client
             }
             else
             {
-                writer.WriteLine(input);
-                writer.Flush();
+                if (isConnected)
+                {
+                    writer.WriteLine(input);
+                    writer.Flush();
+                    Console.WriteLine("-> " + input);
+                }
+                else
+                {
+                    writeLine("* You are not connected to a server");
+                }
             }
-            Console.WriteLine("-> " + input);
         }
 
         private void writeLine(string text)
@@ -125,7 +133,9 @@ namespace IRC_Client
             HtmlElement tmp = webBrowser1.Document.CreateElement("span");
             tmp.InnerHtml = text + "<br>\n";
             webBrowser1.Document.GetElementById("main").AppendChild(tmp);
-            webBrowser1.Document.Window.ScrollTo(0, webBrowser1.Document.Body.ScrollRectangle.Height);
+            //webBrowser1.Document.Window.ScrollTo(0, webBrowser1.Document.Body.ScrollRectangle.Height);
+            webBrowser1.Document.InvokeScript("scroll");
+            webBrowser1.Update();
         }
 
         private void writeLineA(string text)
@@ -153,6 +163,42 @@ namespace IRC_Client
                 reader.Close();
             }
             return result;
+        }
+
+        private void resized(object sender, EventArgs e)
+        {
+            try
+            {
+                webBrowser1.Document.InvokeScript("scroll");
+            }
+            catch { }
+        }
+
+        private void button1_Click(object sender, EventArgs e)
+        {
+            HtmlElement csss = webBrowser1.Document.CreateElement("div");
+            csss.SetAttribute("id", "chan");
+            csss.SetAttribute("className", "maincont");
+
+            csss.InnerHtml = "owjhfoiwe fewoifwoe ifwewife";
+            webBrowser1.Document.GetElementById("mainParent").AppendChild(csss);
+            
+            ///HtmlElement css1 = webBrowser1.Document.CreateElement("p");
+            ///css1.InnerHtml = "wow<br>ttesrhntrhn<br>jhndrmnntrfd<br>ohfneowihbng";
+            
+            ///csss.AppendChild(css1);
+        }
+
+        private void button2_Click(object sender, EventArgs e)
+        {
+            webBrowser1.Document.GetElementById("main").Style = "display:none";
+            webBrowser1.Document.GetElementById("chan").Style = "display:block";
+        }
+
+        private void button3_Click(object sender, EventArgs e)
+        {
+            webBrowser1.Document.GetElementById("main").Style = "display:block";
+            webBrowser1.Document.GetElementById("chan").Style = "display:none";
         }
     }
 }
