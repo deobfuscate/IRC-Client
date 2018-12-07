@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.IO;
+using System.Linq;
 using System.Net.Sockets;
 using System.Reflection;
 using System.Runtime.InteropServices;
@@ -15,11 +16,16 @@ namespace IRC_Client
         private static bool isConnected = false;
         private const char PREFIX = '/';
         private readonly List<string> SERVER_CODES = new List<string>() { "001", "002", "003", "004", "005", "251", "252", "254", "255", "375", "372" };
-        public delegate void InvokeDelegate(string arg);
+        public delegate void InvokeDelegate1(string arg);
+        public delegate void InvokeDelegate(string arg, string arg2);
+        private string nickname = "UniqueNickname";
+        private List<string> windows = new List<string>() { "main" };
+        private string activeWindow;
 
         public frmServer()
         {
             InitializeComponent();
+            CheckForIllegalCrossThreadCalls = false;
             webBrowser1.DocumentText = "0";
             webBrowser1.Document.OpenNew(true);
             webBrowser1.ObjectForScripting = this;
@@ -30,12 +36,13 @@ namespace IRC_Client
             css.SetAttribute("type", "text/css");
             css.SetAttribute("href", $"file://{Directory.GetCurrentDirectory()}/styles.css");
             webBrowser1.Document.GetElementsByTagName("head")[0].AppendChild(css);
+            var ree = webBrowser1.Document.GetElementsByTagName("head")[0].DomElement;
             //webBrowser1.Document.Window.ScrollTo(0, webBrowser1.Document.Body.ScrollRectangle.Height);
         }
 
         private void CallbackMethod(IAsyncResult ar)
         {
-            webBrowser1.BeginInvoke(new InvokeDelegate(writeLine), "Connecting...");
+            webBrowser1.BeginInvoke(new InvokeDelegate(writeLine), "main", "Connecting...");
             try
             {
                 isConnected = false;
@@ -58,7 +65,6 @@ namespace IRC_Client
                     {
                         while ((inputLine = reader.ReadLine()) != null)
                         {
-                            //webBrowser1.BeginInvoke(new InvokeDelegate(writeLine), "<- " + inputLine + "\n");
                             Console.WriteLine("<- " + inputLine);
                             string[] splitInput = inputLine.Split(new Char[] { ' ' });
                             if (splitInput.Length < 2)
@@ -72,13 +78,40 @@ namespace IRC_Client
                             }
                             if (splitInput[1] == "NOTICE")
                             {
-                                writeLineA($"-<span class=\"notice_nick\">{splitInput[0].Substring(1)}</span>- {formatString(splitInput)}");
+                                writeLineA("main", $"-<span class=\"notice_nick\">{splitInput[0].Substring(1)}</span>- {formatString(splitInput)}");
+                            }
+                            if (splitInput[1] == "JOIN")
+                            {
+                                // todo: filter by current nick
+                                string channelName = noColon(splitInput[2]).Remove(0, 1); // rem #
+                                webBrowser1.BeginInvoke(new InvokeDelegate1(makeWindow), channelName);
+                                windows.Add(channelName);
+                                writeLineA(channelName, $"* You have joined #{channelName}");
+                            }
+                            if (splitInput[1] == "PRIVMSG")
+                            {
+                                if (windows.Contains(splitInput[3].Remove(0, 1)))
+                                {
+                                    writeLineA(splitInput[3].Remove(0, 1), $"<{noColon(splitInput[0])}> {noColon(string.Join(" ", splitInput.Skip(4).ToArray()))}");
+                                }
+                            }
+                            // topic
+                            if (splitInput[1] == "332")
+                            {
+                                if (windows.Contains(splitInput[3].Remove(0, 1)))
+                                {
+                                    writeLineA(splitInput[3].Remove(0, 1), $"* Topic is: {noColon(string.Join(" ", splitInput.Skip(4).ToArray()))}");
+                                }
+                            }
+                            if (splitInput[1] == "ERROR")
+                            {
+                                //todo
                             }
                             if (inputLine.Length > 1)
                             {
                                 if (SERVER_CODES.Contains(splitInput[1]))
                                 {
-                                    writeLineA($"-<span class=\"notice_nick\">Server</span>- {formatString(splitInput)}");
+                                    writeLineA("main", $"-<span class=\"notice_nick\">Server</span>- {formatString(splitInput)}");
                                 }
                             }
                         }
@@ -92,7 +125,7 @@ namespace IRC_Client
             {
                 isConnected = false;
                 Console.WriteLine(ex);
-                writeLine("<- <span color='red'>DISCONNECTED</span>");
+                //writeLine("<- <span color='red'>DISCONNECTED</span>");
             }
         }
 
@@ -123,24 +156,24 @@ namespace IRC_Client
                 }
                 else
                 {
-                    writeLine("* You are not connected to a server");
+                    writeLine("main", "* You are not connected to a server");
                 }
             }
         }
 
-        private void writeLine(string text)
+        private void writeLine(string window, string text)
         {
             HtmlElement tmp = webBrowser1.Document.CreateElement("span");
             tmp.InnerHtml = text + "<br>\n";
-            webBrowser1.Document.GetElementById("main").AppendChild(tmp);
+            webBrowser1.Document.GetElementById(window).AppendChild(tmp);
             //webBrowser1.Document.Window.ScrollTo(0, webBrowser1.Document.Body.ScrollRectangle.Height);
             webBrowser1.Document.InvokeScript("scroll");
             webBrowser1.Update();
         }
 
-        private void writeLineA(string text)
+        private void writeLineA(string window, string text)
         {
-            webBrowser1.BeginInvoke(new InvokeDelegate(writeLine), text);
+            webBrowser1.BeginInvoke(new InvokeDelegate(writeLine), window, text);
         }
 
         private string formatString(string[] input)
@@ -174,31 +207,47 @@ namespace IRC_Client
             catch { }
         }
 
-        private void button1_Click(object sender, EventArgs e)
+        private void makeWindow(string windowName)
         {
-            HtmlElement csss = webBrowser1.Document.CreateElement("div");
-            csss.SetAttribute("id", "chan");
-            csss.SetAttribute("className", "maincont");
+            HtmlElement channelDiv = webBrowser1.Document.CreateElement("div");
+            channelDiv.SetAttribute("id", windowName);
+            channelDiv.SetAttribute("className", "maincont");
+            webBrowser1.Document.GetElementById("mainParent").AppendChild(channelDiv);
 
-            csss.InnerHtml = "owjhfoiwe fewoifwoe ifwewife";
-            webBrowser1.Document.GetElementById("mainParent").AppendChild(csss);
-            
-            ///HtmlElement css1 = webBrowser1.Document.CreateElement("p");
-            ///css1.InnerHtml = "wow<br>ttesrhntrhn<br>jhndrmnntrfd<br>ohfneowihbng";
-            
-            ///csss.AppendChild(css1);
+            HtmlElement channelLink = webBrowser1.Document.CreateElement("a");
+            channelLink.SetAttribute("id", $"{windowName}_link");
+            channelLink.InnerHtml = $"#{windowName}";
+            webBrowser1.Document.GetElementById("channel_list").AppendChild(channelLink);
+            foreach (HtmlElement el in webBrowser1.Document.GetElementsByTagName("a"))
+            {
+                if (el.Id != null && el.Id.Equals($"{windowName}_link"))
+                    el.AttachEventHandler("onclick", (sender1, e1) => clickEventHandler(el, EventArgs.Empty));
+            }
+
+            HtmlElement br = webBrowser1.Document.CreateElement("br");
+            webBrowser1.Document.GetElementById("channel_list").AppendChild(br);
+            windows.Add(windowName);
+            switchTo(windowName);
+        }
+        public void clickEventHandler(object sender, EventArgs e)
+        {
+            var tmp = (HtmlElement)sender;
+            switchTo(tmp.InnerHtml.Remove(0, 1));
         }
 
-        private void button2_Click(object sender, EventArgs e)
+        public void switchTo(string window)
         {
-            webBrowser1.Document.GetElementById("main").Style = "display:none";
-            webBrowser1.Document.GetElementById("chan").Style = "display:block";
+            if (windows.Contains(window))
+            {
+                foreach (var w in windows)
+                    webBrowser1.Document.GetElementById(w).Style = "display:none";
+                webBrowser1.Document.GetElementById(window).Style = "display:block";
+                // add scroll
+                activeWindow = window;
+            }
         }
 
-        private void button3_Click(object sender, EventArgs e)
-        {
-            webBrowser1.Document.GetElementById("main").Style = "display:block";
-            webBrowser1.Document.GetElementById("chan").Style = "display:none";
-        }
+        private string noColon(string input) => (input[0]==':') ? input.Remove(0, 1) : input;
+        
     }
 }
