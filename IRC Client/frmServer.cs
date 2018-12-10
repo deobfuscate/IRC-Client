@@ -82,19 +82,24 @@ namespace IRC_Client
                             }
                             if (splitInput[1] == "JOIN")
                             {
+                                string channelName = NoColon(splitInput[2]).Remove(0, 1); // rem #
                                 if (NoColon(splitInput[0]).Substring(0, nickname.Length).Equals(nickname))
                                 {
-                                    string channelName = NoColon(splitInput[2]).Remove(0, 1); // rem #
                                     ui.BeginInvoke(new InvokeDelegate1(MakeWindow), channelName);
                                     windows.Add(channelName);
                                     WriteLineA(channelName, $"* You have joined #{channelName}");
                                 }
+                                else
+                                    if (windows.Contains(channelName))
+                                        WriteLineA(channelName, $"* {NoColon(splitInput[0])} has joined #{channelName}");
                             }
                             if (splitInput[1] == "PRIVMSG")
                             {
-                                if (windows.Contains(splitInput[2].Remove(0, 1)))
+                                string channelName = splitInput[2].Remove(0, 1);
+                                if (windows.Contains(channelName))
                                 {
-                                    WriteLineA(splitInput[2].Remove(0, 1), $"<span class=\"chat_nick\">&lt;{NoColon(splitInput[0]).Split('!')[0]}&gt;</span> {NoColon(string.Join(" ", splitInput.Skip(3).ToArray()))}");
+                                    WriteLineA(channelName, $"<span class=\"chat_nick\">&lt;{NoColon(splitInput[0]).Split('!')[0]}&gt;</span> {NoColon(string.Join(" ", splitInput.Skip(3).ToArray()))}");
+                                    ui.BeginInvoke(new InvokeDelegate1(ChannelListNotify), channelName);
                                 }
                             }
                             // topic
@@ -129,6 +134,14 @@ namespace IRC_Client
                 Console.WriteLine(ex);
                 //writeLine("<- <span color='red'>DISCONNECTED</span>");
             }
+        }
+
+        private void ChannelListNotify(string channelName)
+        {
+            string currentClass = ui.Document.GetElementById($"{channelName}_link").GetAttribute("className");
+            if (!activeWindow.Equals(channelName))
+                if (!currentClass.Contains("channels_unread"))
+                    ui.Document.GetElementById($"{channelName}_link").SetAttribute("className", currentClass + " channels_unread");
         }
 
         public void Send(string input)
@@ -249,6 +262,12 @@ namespace IRC_Client
                 ui.Document.GetElementById(window).Style = "display:block";
                 // add scroll
                 activeWindow = window;
+                if (!window.Equals("main"))
+                {
+                    string currentClass = ui.Document.GetElementById($"{window}_link").GetAttribute("className");
+                    if (currentClass.Contains("channels_unread"))
+                        ui.Document.GetElementById($"{window}_link").SetAttribute("className", "");
+                }
             }
         }
 
