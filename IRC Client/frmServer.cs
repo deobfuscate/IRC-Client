@@ -1,4 +1,5 @@
-﻿using System;
+﻿using Microsoft.Win32;
+using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
@@ -24,25 +25,25 @@ namespace IRC_Client
 
         public frmServer()
         {
+            UseLatestIEVersion();
             InitializeComponent();
             CheckForIllegalCrossThreadCalls = false;
-            webBrowser1.DocumentText = "0";
-            webBrowser1.Document.OpenNew(true);
-            webBrowser1.ObjectForScripting = this;
-            webBrowser1.Document.Write(ReadEmbeddedFile("ui.html"));
+            ui.DocumentText = "0";
+            ui.Document.OpenNew(true);
+            ui.ObjectForScripting = this;
+            ui.Document.Write(ReadEmbeddedFile("ui2.html"));
             // Load external CSS file
-            HtmlElement css = webBrowser1.Document.CreateElement("link");
+            HtmlElement css = ui.Document.CreateElement("link");
             css.SetAttribute("rel", "stylesheet");
             css.SetAttribute("type", "text/css");
             css.SetAttribute("href", $"file://{Directory.GetCurrentDirectory()}/styles.css");
-            webBrowser1.Document.GetElementsByTagName("head")[0].AppendChild(css);
-            var ree = webBrowser1.Document.GetElementsByTagName("head")[0].DomElement;
+            ui.Document.GetElementsByTagName("head")[0].AppendChild(css);
             //webBrowser1.Document.Window.ScrollTo(0, webBrowser1.Document.Body.ScrollRectangle.Height);
         }
 
         private void CallbackMethod(IAsyncResult ar)
         {
-            webBrowser1.BeginInvoke(new InvokeDelegate(writeLine), "main", "Connecting...");
+            ui.BeginInvoke(new InvokeDelegate(WriteLine), "main", "Connecting...");
             try
             {
                 isConnected = false;
@@ -67,8 +68,7 @@ namespace IRC_Client
                         {
                             Console.WriteLine("<- " + inputLine);
                             string[] splitInput = inputLine.Split(new Char[] { ' ' });
-                            if (splitInput.Length < 2)
-                                continue;
+                            if (splitInput.Length < 2) continue;
                             if (splitInput[0] == "PING")
                             {
                                 string key = splitInput[1];
@@ -78,21 +78,23 @@ namespace IRC_Client
                             }
                             if (splitInput[1] == "NOTICE")
                             {
-                                writeLineA("main", $"-<span class=\"notice_nick\">{splitInput[0].Substring(1)}</span>- {formatString(splitInput)}");
+                                WriteLineA("main", $"-<span class=\"notice_nick\">{splitInput[0].Substring(1)}</span>- {FormatString(splitInput)}");
                             }
                             if (splitInput[1] == "JOIN")
                             {
-                                // todo: filter by current nick
-                                string channelName = noColon(splitInput[2]).Remove(0, 1); // rem #
-                                webBrowser1.BeginInvoke(new InvokeDelegate1(makeWindow), channelName);
-                                windows.Add(channelName);
-                                writeLineA(channelName, $"* You have joined #{channelName}");
+                                if (NoColon(splitInput[0]).Substring(0, nickname.Length).Equals(nickname))
+                                {
+                                    string channelName = NoColon(splitInput[2]).Remove(0, 1); // rem #
+                                    ui.BeginInvoke(new InvokeDelegate1(MakeWindow), channelName);
+                                    windows.Add(channelName);
+                                    WriteLineA(channelName, $"* You have joined #{channelName}");
+                                }
                             }
                             if (splitInput[1] == "PRIVMSG")
                             {
-                                if (windows.Contains(splitInput[3].Remove(0, 1)))
+                                if (windows.Contains(splitInput[2].Remove(0, 1)))
                                 {
-                                    writeLineA(splitInput[3].Remove(0, 1), $"<{noColon(splitInput[0])}> {noColon(string.Join(" ", splitInput.Skip(4).ToArray()))}");
+                                    WriteLineA(splitInput[2].Remove(0, 1), $"<span class=\"chat_nick\">&lt;{NoColon(splitInput[0]).Split('!')[0]}&gt;</span> {NoColon(string.Join(" ", splitInput.Skip(3).ToArray()))}");
                                 }
                             }
                             // topic
@@ -100,18 +102,18 @@ namespace IRC_Client
                             {
                                 if (windows.Contains(splitInput[3].Remove(0, 1)))
                                 {
-                                    writeLineA(splitInput[3].Remove(0, 1), $"* Topic is: {noColon(string.Join(" ", splitInput.Skip(4).ToArray()))}");
+                                    WriteLineA(splitInput[3].Remove(0, 1), $"* Topic is: {NoColon(string.Join(" ", splitInput.Skip(4).ToArray()))}");
                                 }
                             }
                             if (splitInput[1] == "ERROR")
                             {
-                                //todo
+                                // todo
                             }
                             if (inputLine.Length > 1)
                             {
                                 if (SERVER_CODES.Contains(splitInput[1]))
                                 {
-                                    writeLineA("main", $"-<span class=\"notice_nick\">Server</span>- {formatString(splitInput)}");
+                                    WriteLineA("main", $"-<span class=\"notice_nick\">Server</span>- {FormatString(splitInput)}");
                                 }
                             }
                         }
@@ -129,13 +131,13 @@ namespace IRC_Client
             }
         }
 
-        public void send(string input)
+        public void Send(string input)
         {
             if (input == null) return;
             if (input[0] == PREFIX)
             {
-                String cmd = input.Remove(0, 1);
-                String[] parts = cmd.Split(' ');
+                string cmd = input.Remove(0, 1);
+                string[] parts = cmd.Split(' ');
                 switch (parts[0])
                 {
                     case "server":
@@ -156,27 +158,27 @@ namespace IRC_Client
                 }
                 else
                 {
-                    writeLine("main", "* You are not connected to a server");
+                    WriteLine("main", "* You are not connected to a server");
                 }
             }
         }
 
-        private void writeLine(string window, string text)
+        private void WriteLine(string window, string text)
         {
-            HtmlElement tmp = webBrowser1.Document.CreateElement("span");
+            HtmlElement tmp = ui.Document.CreateElement("span");
             tmp.InnerHtml = text + "<br>\n";
-            webBrowser1.Document.GetElementById(window).AppendChild(tmp);
+            ui.Document.GetElementById(window).AppendChild(tmp);
             //webBrowser1.Document.Window.ScrollTo(0, webBrowser1.Document.Body.ScrollRectangle.Height);
-            webBrowser1.Document.InvokeScript("scroll");
-            webBrowser1.Update();
+            ui.Document.InvokeScript("scroll");
+            ui.Update();
         }
 
-        private void writeLineA(string window, string text)
+        private void WriteLineA(string window, string text)
         {
-            webBrowser1.BeginInvoke(new InvokeDelegate(writeLine), window, text);
+            ui.BeginInvoke(new InvokeDelegate(WriteLine), window, text);
         }
 
-        private string formatString(string[] input)
+        private string FormatString(string[] input)
         {
             string tmp = "";
             for (int i = 3; i < input.Length; i++)
@@ -198,56 +200,88 @@ namespace IRC_Client
             return result;
         }
 
-        private void resized(object sender, EventArgs e)
+        private void Resized(object sender, EventArgs e)
         {
             try
             {
-                webBrowser1.Document.InvokeScript("scroll");
+                ui.Document.InvokeScript("scroll");
             }
             catch { }
         }
 
-        private void makeWindow(string windowName)
+        private void MakeWindow(string windowName)
         {
-            HtmlElement channelDiv = webBrowser1.Document.CreateElement("div");
+            HtmlElement channelDiv = ui.Document.CreateElement("div");
             channelDiv.SetAttribute("id", windowName);
-            channelDiv.SetAttribute("className", "maincont");
-            webBrowser1.Document.GetElementById("mainParent").AppendChild(channelDiv);
+            channelDiv.SetAttribute("className", "window");
+            channelDiv.Style = "display:none";
+            ui.Document.GetElementById("container").AppendChild(channelDiv);
 
-            HtmlElement channelLink = webBrowser1.Document.CreateElement("a");
+            HtmlElement channelLink = ui.Document.CreateElement("a");
             channelLink.SetAttribute("id", $"{windowName}_link");
             channelLink.InnerHtml = $"#{windowName}";
-            webBrowser1.Document.GetElementById("channel_list").AppendChild(channelLink);
-            foreach (HtmlElement el in webBrowser1.Document.GetElementsByTagName("a"))
+            ui.Document.GetElementById("sidel").AppendChild(channelLink);
+            foreach (HtmlElement el in ui.Document.GetElementsByTagName("a"))
             {
                 if (el.Id != null && el.Id.Equals($"{windowName}_link"))
-                    el.AttachEventHandler("onclick", (sender1, e1) => clickEventHandler(el, EventArgs.Empty));
+                    el.AttachEventHandler("onclick", (sender1, e1) => ClickEventHandler(el, EventArgs.Empty));
             }
 
-            HtmlElement br = webBrowser1.Document.CreateElement("br");
-            webBrowser1.Document.GetElementById("channel_list").AppendChild(br);
+            HtmlElement br = ui.Document.CreateElement("br");
+            ui.Document.GetElementById("sidel").AppendChild(br);
+
             windows.Add(windowName);
-            switchTo(windowName);
-        }
-        public void clickEventHandler(object sender, EventArgs e)
-        {
-            var tmp = (HtmlElement)sender;
-            switchTo(tmp.InnerHtml.Remove(0, 1));
+            SwitchTo(windowName);
         }
 
-        public void switchTo(string window)
+        public void ClickEventHandler(object sender, EventArgs e)
+        {
+            var tmp = (HtmlElement)sender;
+            SwitchTo(tmp.InnerHtml.Remove(0, 1));
+        }
+
+        public void SwitchTo(string window)
         {
             if (windows.Contains(window))
             {
                 foreach (var w in windows)
-                    webBrowser1.Document.GetElementById(w).Style = "display:none";
-                webBrowser1.Document.GetElementById(window).Style = "display:block";
+                    ui.Document.GetElementById(w).Style = "display:none";
+                ui.Document.GetElementById(window).Style = "display:block";
                 // add scroll
                 activeWindow = window;
             }
         }
 
-        private string noColon(string input) => (input[0]==':') ? input.Remove(0, 1) : input;
-        
+        private string NoColon(string input) => (input[0]==':') ? input.Remove(0, 1) : input;
+
+        /// <summary>
+        /// Forces WebBrowser control to use the latest version of Internet Explorer that is installed on current machine
+        /// Source: https://stackoverflow.com/questions/17922308/use-latest-version-of-internet-explorer-in-the-webbrowser-control/34267121#34267121
+        /// </summary>
+        private static void UseLatestIEVersion()
+        {
+            int BrowserVer, RegVal;
+
+            // get the installed IE version
+            using (WebBrowser Wb = new WebBrowser())
+                BrowserVer = Wb.Version.Major;
+
+            // set the appropriate IE version
+            if (BrowserVer >= 11)
+                RegVal = 11001;
+            else if (BrowserVer == 10)
+                RegVal = 10001;
+            else if (BrowserVer == 9)
+                RegVal = 9999;
+            else if (BrowserVer == 8)
+                RegVal = 8888;
+            else
+                RegVal = 7000;
+
+            // set the actual key
+            using (RegistryKey Key = Registry.CurrentUser.CreateSubKey(@"SOFTWARE\Microsoft\Internet Explorer\Main\FeatureControl\FEATURE_BROWSER_EMULATION", RegistryKeyPermissionCheck.ReadWriteSubTree))
+                if (Key.GetValue(System.Diagnostics.Process.GetCurrentProcess().ProcessName + ".exe") == null)
+                    Key.SetValue(System.Diagnostics.Process.GetCurrentProcess().ProcessName + ".exe", RegVal, RegistryValueKind.DWord);
+        }
     }
 }

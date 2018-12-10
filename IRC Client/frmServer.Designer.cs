@@ -28,35 +28,33 @@
         /// </summary>
         private void InitializeComponent()
         {
-            this.webBrowser1 = new System.Windows.Forms.WebBrowser();
+            this.ui = new System.Windows.Forms.WebBrowser();
             this.SuspendLayout();
             // 
             // webBrowser1
             // 
-            this.webBrowser1.Dock = System.Windows.Forms.DockStyle.Fill;
-            this.webBrowser1.Location = new System.Drawing.Point(0, 0);
-            this.webBrowser1.Margin = new System.Windows.Forms.Padding(4);
-            this.webBrowser1.MinimumSize = new System.Drawing.Size(27, 25);
-            this.webBrowser1.Name = "webBrowser1";
-            this.webBrowser1.Size = new System.Drawing.Size(945, 484);
-            this.webBrowser1.TabIndex = 5;
+            this.ui.Dock = System.Windows.Forms.DockStyle.Fill;
+            this.ui.Location = new System.Drawing.Point(0, 0);
+            this.ui.MinimumSize = new System.Drawing.Size(20, 20);
+            this.ui.Name = "webBrowser1";
+            this.ui.Size = new System.Drawing.Size(709, 393);
+            this.ui.TabIndex = 5;
             // 
             // frmServer
             // 
-            this.AutoScaleDimensions = new System.Drawing.SizeF(8F, 16F);
+            this.AutoScaleDimensions = new System.Drawing.SizeF(6F, 13F);
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
-            this.ClientSize = new System.Drawing.Size(945, 484);
-            this.Controls.Add(this.webBrowser1);
-            this.Margin = new System.Windows.Forms.Padding(4);
+            this.ClientSize = new System.Drawing.Size(709, 393);
+            this.Controls.Add(this.ui);
             this.Name = "frmServer";
             this.Text = "IRC  Client";
-            this.Resize += new System.EventHandler(this.resized);
+            this.Resize += new System.EventHandler(this.Resized);
             this.ResumeLayout(false);
 
         }
 
         #endregion
-        private System.Windows.Forms.WebBrowser webBrowser1;
+        private System.Windows.Forms.WebBrowser ui;
     }
 }
 
