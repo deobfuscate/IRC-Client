@@ -1,4 +1,5 @@
 ﻿using Microsoft.Win32;
+using mshtml;
 using System;
 using System.Collections.Generic;
 using System.IO;
@@ -21,6 +22,7 @@ namespace IRC_Client
         public delegate void InvokeDelegate(string arg, string arg2);
         private string nickname = "UniqueNickname";
         private List<string> windows = new List<string>() { "main" };
+        private Dictionary<string, string> topics = new Dictionary<string, string>() { { "main", "Server Window" } };
         private string activeWindow;
 
         public frmServer()
@@ -67,23 +69,23 @@ namespace IRC_Client
                         while ((inputLine = reader.ReadLine()) != null)
                         {
                             Console.WriteLine("<- " + inputLine);
-                            string[] splitInput = inputLine.Split(new Char[] { ' ' });
-                            if (splitInput.Length < 2) continue;
-                            if (splitInput[0] == "PING")
+                            string[] tokens = inputLine.Split(new Char[] { ' ' });
+                            if (tokens.Length < 2) continue;
+                            if (tokens[0] == "PING")
                             {
-                                string key = splitInput[1];
+                                string key = tokens[1];
                                 Console.WriteLine("-> PONG " + key);
                                 writer.WriteLine("PONG " + key);
                                 writer.Flush();
                             }
-                            if (splitInput[1] == "NOTICE")
+                            if (tokens[1] == "NOTICE")
                             {
-                                WriteLineA("main", $"-<span class=\"notice_nick\">{splitInput[0].Substring(1)}</span>- {FormatString(splitInput)}");
+                                WriteLineA("main", $"-<span class=\"notice_nick\">{tokens[0].Substring(1)}</span>- {FormatString(tokens)}");
                             }
-                            if (splitInput[1] == "JOIN")
+                            if (tokens[1] == "JOIN")
                             {
-                                string channelName = NoColon(splitInput[2]).Remove(0, 1); // rem #
-                                if (NoColon(splitInput[0]).Substring(0, nickname.Length).Equals(nickname))
+                                string channelName = NoColon(tokens[2]).Remove(0, 1); // rem #
+                                if (NoColon(tokens[0]).Substring(0, nickname.Length).Equals(nickname))
                                 {
                                     ui.BeginInvoke(new InvokeDelegate1(MakeWindow), channelName);
                                     windows.Add(channelName);
@@ -91,34 +93,59 @@ namespace IRC_Client
                                 }
                                 else
                                     if (windows.Contains(channelName))
-                                        WriteLineA(channelName, $"* {NoColon(splitInput[0])} has joined #{channelName}");
+                                        WriteLineA(channelName, $"* {NoColon(tokens[0])} has joined #{channelName}");
                             }
-                            if (splitInput[1] == "PRIVMSG")
+                            if (tokens[1] == "PRIVMSG")
                             {
-                                string channelName = splitInput[2].Remove(0, 1);
+                                string channelName = tokens[2].Remove(0, 1);
                                 if (windows.Contains(channelName))
                                 {
-                                    WriteLineA(channelName, $"<span class=\"chat_nick\">&lt;{NoColon(splitInput[0]).Split('!')[0]}&gt;</span> {NoColon(string.Join(" ", splitInput.Skip(3).ToArray()))}");
+                                    WriteLineA(channelName, $"<span class=\"chat_nick\">&lt;{NoColon(tokens[0]).Split('!')[0]}&gt;</span> {NoColon(string.Join(" ", tokens.Skip(3).ToArray()))}");
                                     ui.BeginInvoke(new InvokeDelegate1(ChannelListNotify), channelName);
                                 }
                             }
                             // topic
-                            if (splitInput[1] == "332")
+                            if (tokens[1] == "332")
                             {
-                                if (windows.Contains(splitInput[3].Remove(0, 1)))
+                                topics.Add(tokens[3].Remove(0, 1), NoColon(string.Join(" ", tokens.Skip(4).ToArray())));
+                                //if (windows.Contains(splitInput[3].Remove(0, 1)))
+                                //{
+                                //    WriteLineA(splitInput[3].Remove(0, 1), $"* Topic is: {NoColon(string.Join(" ", splitInput.Skip(4).ToArray()))}");
+                                //}
+                            }
+                            // userlist
+                            if (tokens[1] == "353")
+                            {
+                                string channelName = tokens[4].Remove(0, 1);
+                                if (windows.Contains(channelName))
                                 {
-                                    WriteLineA(splitInput[3].Remove(0, 1), $"* Topic is: {NoColon(string.Join(" ", splitInput.Skip(4).ToArray()))}");
+                                    tokens[5] = NoColon(tokens[5]);
+                                    foreach (string u in tokens.Skip(5).Where(x => !string.IsNullOrEmpty(x)).ToArray())
+                                    //WriteLineA($"{channelName}_users", $"<span class=\"user_{u}\">{u}</span>");
+                                    {
+                                        ui.BeginInvoke(new InvokeDelegate(AddUserToList), channelName, u);
+                                    }
                                 }
                             }
-                            if (splitInput[1] == "ERROR")
+
+                            if (tokens[1] == "001")
+                            {
+                                nickname = tokens[2];
+                            }
+                            if (tokens[1] == "QUIT")
+                            {
+                                string nick = NoColon(tokens[0]).Split('!')[0];
+                                ui.BeginInvoke(new InvokeDelegate1(RemoveFromUserList), nick);
+                            }
+                            if (tokens[1] == "ERROR")
                             {
                                 // todo
                             }
                             if (inputLine.Length > 1)
                             {
-                                if (SERVER_CODES.Contains(splitInput[1]))
+                                if (SERVER_CODES.Contains(tokens[1]))
                                 {
-                                    WriteLineA("main", $"-<span class=\"notice_nick\">Server</span>- {FormatString(splitInput)}");
+                                    WriteLineA("main", $"-<span class=\"notice_nick\">Server</span>- {FormatString(tokens)}");
                                 }
                             }
                         }
@@ -133,6 +160,28 @@ namespace IRC_Client
                 isConnected = false;
                 Console.WriteLine(ex);
                 //writeLine("<- <span color='red'>DISCONNECTED</span>");
+            }
+        }
+
+        private void AddUserToList(string channelName, string u)
+        {
+            HtmlElement ul = ui.Document.CreateElement("li");
+            ul.SetAttribute("className", $"user_{u}");
+            ul.InnerHtml = $"{u}";
+            ui.Document.GetElementById($"{channelName}_users_list").AppendChild(ul);
+        }
+
+        private void RemoveFromUserList(string nick)
+        {
+            //foreach (IHTMLDOMNode x in GetElementsByClass((HTMLDocument)ui.Document.DomDocument, $"user_{nick}"))
+            //    x.parentNode.removeNode();
+            HTMLDocument tmp = (HTMLDocument)ui.Document.DomDocument;
+
+            foreach (IHTMLDOMNode el in tmp.getElementsByTagName("li"))
+            {
+                if (el.nodeValue.getAttribute("className").Equals($"user_{nick}")) {
+                    el.parentNode.removeChild(el);
+                }
             }
         }
 
@@ -228,12 +277,12 @@ namespace IRC_Client
             channelDiv.SetAttribute("id", windowName);
             channelDiv.SetAttribute("className", "window");
             channelDiv.Style = "display:none";
-            ui.Document.GetElementById("container").AppendChild(channelDiv);
+            ui.Document.GetElementsByTagName("body")[0].AppendChild(channelDiv);
 
             HtmlElement channelLink = ui.Document.CreateElement("a");
             channelLink.SetAttribute("id", $"{windowName}_link");
             channelLink.InnerHtml = $"#{windowName}";
-            ui.Document.GetElementById("sidel").AppendChild(channelLink);
+            ui.Document.GetElementById("channel_list").AppendChild(channelLink);
             foreach (HtmlElement el in ui.Document.GetElementsByTagName("a"))
             {
                 if (el.Id != null && el.Id.Equals($"{windowName}_link"))
@@ -241,7 +290,16 @@ namespace IRC_Client
             }
 
             HtmlElement br = ui.Document.CreateElement("br");
-            ui.Document.GetElementById("sidel").AppendChild(br);
+            ui.Document.GetElementById("channel_list").AppendChild(br);
+
+            HtmlElement userDiv = ui.Document.CreateElement("div");
+            userDiv.SetAttribute("id", $"{windowName}_users");
+            userDiv.SetAttribute("className", "sider");
+            userDiv.Style = "display:none";
+            ui.Document.GetElementsByTagName("body")[0].AppendChild(userDiv);
+            HtmlElement ul = ui.Document.CreateElement("ul");
+            ul.SetAttribute("id", $"{windowName}_users_list");
+            ui.Document.GetElementById($"{windowName}_users").AppendChild(ul);
 
             windows.Add(windowName);
             SwitchTo(windowName);
@@ -258,15 +316,26 @@ namespace IRC_Client
             if (windows.Contains(window))
             {
                 foreach (var w in windows)
+                {
                     ui.Document.GetElementById(w).Style = "display:none";
+                    ui.Document.GetElementById($"{w}_users").Style = "display:none";
+                }
                 ui.Document.GetElementById(window).Style = "display:block";
+                ui.Document.GetElementById($"{window}_users").Style = "display:block";
                 // add scroll
                 activeWindow = window;
+                // unread channel message notify
                 if (!window.Equals("main"))
                 {
                     string currentClass = ui.Document.GetElementById($"{window}_link").GetAttribute("className");
                     if (currentClass.Contains("channels_unread"))
                         ui.Document.GetElementById($"{window}_link").SetAttribute("className", "");
+                }
+
+                // update topic
+                if (topics.ContainsKey(window))
+                {
+                    ui.Document.GetElementById("topic").InnerHtml = $"#{window} | {topics[window]}";
                 }
             }
         }
@@ -301,6 +370,25 @@ namespace IRC_Client
             using (RegistryKey Key = Registry.CurrentUser.CreateSubKey(@"SOFTWARE\Microsoft\Internet Explorer\Main\FeatureControl\FEATURE_BROWSER_EMULATION", RegistryKeyPermissionCheck.ReadWriteSubTree))
                 if (Key.GetValue(System.Diagnostics.Process.GetCurrentProcess().ProcessName + ".exe") == null)
                     Key.SetValue(System.Diagnostics.Process.GetCurrentProcess().ProcessName + ".exe", RegVal, RegistryValueKind.DWord);
+        }
+
+        private void RemoveById(string id)
+        {
+            HTMLDocument tmp = (HTMLDocument)ui.Document.DomDocument;
+            IHTMLDOMNode node = tmp.getElementById(id) as IHTMLDOMNode;
+            node.parentNode.removeChild(node);
+        }
+
+        private IEnumerable<IHTMLDOMNode> GetElementsByClass(HTMLDocument doc, string className)
+        {
+            foreach (IHTMLDOMNode e in doc.all)
+                if (e.parentNode.attributes("className").Contains(className))
+                    yield return e;
+        }
+
+        private void button1_Click(object sender, EventArgs e)
+        {
+            Console.WriteLine(ui.Document.GetElementsByTagName("html")[0].InnerHtml);
         }
     }
 }

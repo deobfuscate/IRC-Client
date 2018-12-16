@@ -29,22 +29,34 @@
         private void InitializeComponent()
         {
             this.ui = new System.Windows.Forms.WebBrowser();
+            this.button1 = new System.Windows.Forms.Button();
             this.SuspendLayout();
             // 
-            // webBrowser1
+            // ui
             // 
             this.ui.Dock = System.Windows.Forms.DockStyle.Fill;
             this.ui.Location = new System.Drawing.Point(0, 0);
             this.ui.MinimumSize = new System.Drawing.Size(20, 20);
-            this.ui.Name = "webBrowser1";
+            this.ui.Name = "ui";
             this.ui.Size = new System.Drawing.Size(709, 393);
             this.ui.TabIndex = 5;
+            // 
+            // button1
+            // 
+            this.button1.Location = new System.Drawing.Point(603, 114);
+            this.button1.Name = "button1";
+            this.button1.Size = new System.Drawing.Size(64, 25);
+            this.button1.TabIndex = 6;
+            this.button1.Text = "button1";
+            this.button1.UseVisualStyleBackColor = true;
+            this.button1.Click += new System.EventHandler(this.button1_Click);
             // 
             // frmServer
             // 
             this.AutoScaleDimensions = new System.Drawing.SizeF(6F, 13F);
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
             this.ClientSize = new System.Drawing.Size(709, 393);
+            this.Controls.Add(this.button1);
             this.Controls.Add(this.ui);
             this.Name = "frmServer";
             this.Text = "IRC  Client";
@@ -55,6 +67,7 @@
 
         #endregion
         private System.Windows.Forms.WebBrowser ui;
+        private System.Windows.Forms.Button button1;
     }
 }
 

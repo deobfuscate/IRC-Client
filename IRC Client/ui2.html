@@ -23,7 +23,7 @@
             background-color:black;
         }
 
-        .side {
+        .sidel {
             background-color: #2f2f2f;
             position: absolute;
             top: 0px;
@@ -32,13 +32,19 @@
             overflow: auto;
             padding-left: 5px;
             padding-top: 5px;
-        }
 
-        #sidel {
             left: 0px;
         }
 
-        #sider {
+        .sider {
+            background-color: #2f2f2f;
+            position: absolute;
+            top: 0px;
+            width: 235px; /*240*/
+            bottom: 0px;
+            overflow: auto;
+            padding-left: 5px;
+            padding-top: 5px;
             right: 0px;
         }
 
@@ -50,8 +56,17 @@
             height: 45px; /*50*/
             right: 240px;
             overflow: hidden;
-            padding-left: 5px;
+            padding-left: 10px;
+            padding-right: 10px;
             padding-top: 5px;
+        }
+
+        #topic {
+            vertical-align: middle;
+            margin-top: 10px;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
         }
 
         .window {
@@ -86,12 +101,10 @@
     </style>
 </head>
 <body>
-    <div id="sidel" class="side"><a onclick="window.external.SwitchTo('main')">Server</a><br></div>
-    <div id="header"></div>
-    <div id="container">
-        <div class="window" id="main"></div>
-    </div>
+    <div id="channel_list" class="sidel"><a onclick="window.external.SwitchTo('main')">Server</a><br></div>
+    <div id="header"><p id="topic"></p></div>
+    <div class="window" id="main"></div>
     <div id="footer"><input id="textbox" type="text" onKeyDown="send()"></div>
-    <div id="sider" class="side">Users</div>
+    <div id="main_users" class="sider">Users</div>
 </body>
 </html> 
