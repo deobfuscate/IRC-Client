@@ -14,22 +14,22 @@ namespace IRC_Client
     [ComVisible(true)]
     public partial class frmServer : Form
     {
-        private StreamWriter writer;
         private static bool isConnected = false;
-        private const char PREFIX = '/';
+        private string nickname, activeWindow;
+        private readonly char PREFIX = '/';
         private readonly List<string> SERVER_CODES = new List<string>() { "001", "002", "003", "004", "005", "251", "252", "254", "255", "375", "372" };
-        public delegate void InvokeDelegate1(string arg);
-        public delegate void InvokeDelegate(string arg, string arg2);
-        private string nickname = "UniqueNickname";
         private List<string> windows = new List<string>() { "main" };
         private Dictionary<string, string> topics = new Dictionary<string, string>() { { "main", "Server Window" } };
-        private string activeWindow;
-
+        private StreamWriter writer;
+        public delegate void InvokeDelegate1(string arg);
+        public delegate void InvokeDelegate(string arg, string arg2);
         public frmServer()
         {
             UseLatestIEVersion();
             InitializeComponent();
             CheckForIllegalCrossThreadCalls = false;
+            Size = Properties.Settings.Default.FormSize;
+            ChangeNick(Properties.Settings.Default.nick);
             ui.DocumentText = "0";
             ui.Document.OpenNew(true);
             ui.ObjectForScripting = this;
@@ -40,6 +40,7 @@ namespace IRC_Client
             css.SetAttribute("type", "text/css");
             css.SetAttribute("href", $"file://{Directory.GetCurrentDirectory()}/styles.css");
             ui.Document.GetElementsByTagName("head")[0].AppendChild(css);
+            SwitchTo("main");
             //webBrowser1.Document.Window.ScrollTo(0, webBrowser1.Document.Body.ScrollRectangle.Height);
         }
 
@@ -62,14 +63,14 @@ namespace IRC_Client
                     string inputLine;
                     writer.WriteLine("USER default 0 * :default");
                     writer.Flush();
-                    writer.WriteLine("NICK UniqueNickname");
+                    writer.WriteLine($"NICK {nickname}");
                     writer.Flush();
                     while(true)
                     {
                         while ((inputLine = reader.ReadLine()) != null)
                         {
                             Console.WriteLine("<- " + inputLine);
-                            string[] tokens = inputLine.Split(new Char[] { ' ' });
+                            string[] tokens = inputLine.Split(new char[] { ' ' });
                             if (tokens.Length < 2) continue;
                             if (tokens[0] == "PING")
                             {
@@ -82,13 +83,21 @@ namespace IRC_Client
                             {
                                 WriteLineA("main", $"-<span class=\"notice_nick\">{tokens[0].Substring(1)}</span>- {FormatString(tokens)}");
                             }
+                            if (tokens[1] == "NICK")
+                            {
+                                if (NoColon(tokens[0]).Substring(0, nickname.Length).Equals(nickname))
+                                {
+                                    ChangeNick(tokens[2]);
+                                    WriteLineA("main", $"* Your nickname is now {nickname}");
+                                }
+                            }
                             if (tokens[1] == "JOIN")
                             {
                                 string channelName = NoColon(tokens[2]).Remove(0, 1); // rem #
                                 if (NoColon(tokens[0]).Substring(0, nickname.Length).Equals(nickname))
                                 {
-                                    ui.BeginInvoke(new InvokeDelegate1(MakeWindow), channelName);
                                     windows.Add(channelName);
+                                    ui.BeginInvoke(new InvokeDelegate1(MakeWindow), channelName);
                                     WriteLineA(channelName, $"* You have joined #{channelName}");
                                 }
                                 else
@@ -130,16 +139,12 @@ namespace IRC_Client
 
                             if (tokens[1] == "001")
                             {
-                                nickname = tokens[2];
+                                ChangeNick(tokens[2]);
                             }
                             if (tokens[1] == "QUIT")
                             {
                                 string nick = NoColon(tokens[0]).Split('!')[0];
                                 ui.BeginInvoke(new InvokeDelegate1(RemoveFromUserList), nick);
-                            }
-                            if (tokens[1] == "ERROR")
-                            {
-                                // todo
                             }
                             if (inputLine.Length > 1)
                             {
@@ -159,30 +164,32 @@ namespace IRC_Client
             {
                 isConnected = false;
                 Console.WriteLine(ex);
-                //writeLine("<- <span color='red'>DISCONNECTED</span>");
+                ui.BeginInvoke(new InvokeDelegate(WriteLine), "main", "* <span color='red'>DISCONNECTED</span>");
             }
+        }
+
+        private void ChangeNick(string nick)
+        {
+            nickname = NoColon(nick);
+            Text = $"IRC Client - {nickname}";
         }
 
         private void AddUserToList(string channelName, string u)
         {
             HtmlElement ul = ui.Document.CreateElement("li");
-            ul.SetAttribute("className", $"user_{u}");
+            ul.SetAttribute("id", $"{channelName}_{u}");
             ul.InnerHtml = $"{u}";
             ui.Document.GetElementById($"{channelName}_users_list").AppendChild(ul);
         }
 
         private void RemoveFromUserList(string nick)
         {
-            //foreach (IHTMLDOMNode x in GetElementsByClass((HTMLDocument)ui.Document.DomDocument, $"user_{nick}"))
-            //    x.parentNode.removeNode();
-            HTMLDocument tmp = (HTMLDocument)ui.Document.DomDocument;
-
-            foreach (IHTMLDOMNode el in tmp.getElementsByTagName("li"))
-            {
-                if (el.nodeValue.getAttribute("className").Equals($"user_{nick}")) {
-                    el.parentNode.removeChild(el);
+            foreach (string w in windows)
+                if (ui.Document.GetElementById($"{w}_{nick}") != null)
+                {
+                    RemoveById($"{w}_{nick}");
+                    WriteLineA(w, $"* {nick} has quit");
                 }
-            }
         }
 
         private void ChannelListNotify(string channelName)
@@ -198,29 +205,31 @@ namespace IRC_Client
             if (input == null) return;
             if (input[0] == PREFIX)
             {
-                string cmd = input.Remove(0, 1);
-                string[] parts = cmd.Split(' ');
-                switch (parts[0])
+                string[] tokens = input.Remove(0, 1).Split(' ');
+                switch (tokens[0])
                 {
                     case "server":
                         TcpClient irc = new TcpClient();
-                        irc.BeginConnect(parts[1], 6667, CallbackMethod, irc);
+                        irc.BeginConnect(tokens[1], 6667, CallbackMethod, irc);
                         break;
                     default:
+                        if (isConnected)
+                        {
+                            writer.WriteLine(input.Remove(0, 1));
+                            writer.Flush();
+                            Console.WriteLine("-> " + input);
+                        }
                         break;
                 }
             }
             else
             {
-                if (isConnected)
+                if (isConnected && !activeWindow.Equals("main"))
                 {
-                    writer.WriteLine(input);
+                    writer.WriteLine($"PRIVMSG #{activeWindow} :{input}");
                     writer.Flush();
-                    Console.WriteLine("-> " + input);
-                }
-                else
-                {
-                    WriteLine("main", "* You are not connected to a server");
+                    WriteLine(activeWindow, $"<span class=\"chat_nick\">&lt;{nickname}&gt;</span> {input}");
+                    Console.WriteLine($"-> PRIVMSG #{activeWindow} :{input}");
                 }
             }
         }
@@ -322,8 +331,9 @@ namespace IRC_Client
                 }
                 ui.Document.GetElementById(window).Style = "display:block";
                 ui.Document.GetElementById($"{window}_users").Style = "display:block";
-                // add scroll
+                // todo: add scroll
                 activeWindow = window;
+
                 // unread channel message notify
                 if (!window.Equals("main"))
                 {
@@ -335,7 +345,7 @@ namespace IRC_Client
                 // update topic
                 if (topics.ContainsKey(window))
                 {
-                    ui.Document.GetElementById("topic").InnerHtml = $"#{window} | {topics[window]}";
+                    ui.Document.GetElementById("topic").InnerHtml = (activeWindow.Equals("main")) ? topics[window] : $"#{window} | {topics[window]}";
                 }
             }
         }
@@ -389,6 +399,14 @@ namespace IRC_Client
         private void button1_Click(object sender, EventArgs e)
         {
             Console.WriteLine(ui.Document.GetElementsByTagName("html")[0].InnerHtml);
+        }
+
+        private void Closing(object sender, FormClosingEventArgs e)
+        {
+            Properties.Settings.Default.nick = nickname;
+            Properties.Settings.Default.FormSize = Size;
+            Properties.Settings.Default.Location = Location;
+            Properties.Settings.Default.Save();
         }
     }
 }

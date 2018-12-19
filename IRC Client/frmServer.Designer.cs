@@ -36,9 +36,8 @@
             // 
             this.ui.Dock = System.Windows.Forms.DockStyle.Fill;
             this.ui.Location = new System.Drawing.Point(0, 0);
-            this.ui.MinimumSize = new System.Drawing.Size(20, 20);
             this.ui.Name = "ui";
-            this.ui.Size = new System.Drawing.Size(709, 393);
+            this.ui.Size = new System.Drawing.Size(1058, 653);
             this.ui.TabIndex = 5;
             // 
             // button1
@@ -55,11 +54,15 @@
             // 
             this.AutoScaleDimensions = new System.Drawing.SizeF(6F, 13F);
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
-            this.ClientSize = new System.Drawing.Size(709, 393);
-            this.Controls.Add(this.button1);
+            this.ClientSize = new System.Drawing.Size(1058, 653);
             this.Controls.Add(this.ui);
+            this.Controls.Add(this.button1);
+            this.DataBindings.Add(new System.Windows.Forms.Binding("Location", global::IRC_Client.Properties.Settings.Default, "Location", true, System.Windows.Forms.DataSourceUpdateMode.OnPropertyChanged));
+            this.Location = global::IRC_Client.Properties.Settings.Default.Location;
+            this.MinimumSize = new System.Drawing.Size(725, 432);
             this.Name = "frmServer";
             this.Text = "IRC  Client";
+            this.FormClosing += new System.Windows.Forms.FormClosingEventHandler(this.Closing);
             this.Resize += new System.EventHandler(this.Resized);
             this.ResumeLayout(false);
 
