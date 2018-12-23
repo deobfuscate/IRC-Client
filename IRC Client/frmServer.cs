@@ -33,7 +33,7 @@ namespace IRC_Client
             ui.DocumentText = "0";
             ui.Document.OpenNew(true);
             ui.ObjectForScripting = this;
-            ui.Document.Write(ReadEmbeddedFile("ui2.html"));
+            ui.Document.Write(ReadEmbeddedFile("ui.html"));
             // Load external CSS file
             HtmlElement css = ui.Document.CreateElement("link");
             css.SetAttribute("rel", "stylesheet");
@@ -46,7 +46,7 @@ namespace IRC_Client
 
         private void CallbackMethod(IAsyncResult ar)
         {
-            ui.BeginInvoke(new InvokeDelegate(WriteLine), "main", "Connecting...");
+            ui.BeginInvoke(new InvokeDelegate(WriteLine), "main", "<span class=\"info\">* Connecting...</span>");
             try
             {
                 isConnected = false;
@@ -78,80 +78,65 @@ namespace IRC_Client
                                 Console.WriteLine("-> PONG " + key);
                                 writer.WriteLine("PONG " + key);
                                 writer.Flush();
+                                continue;
                             }
-                            if (tokens[1] == "NOTICE")
+                            switch (tokens[1])
                             {
-                                WriteLineA("main", $"-<span class=\"notice_nick\">{tokens[0].Substring(1)}</span>- {FormatString(tokens)}");
-                            }
-                            if (tokens[1] == "NICK")
-                            {
-                                if (NoColon(tokens[0]).Substring(0, nickname.Length).Equals(nickname))
-                                {
+                                case "NOTICE":
+                                    WriteLineA("main", $"-<span class=\"notice_nick\">{tokens[0].Substring(1)}</span>- {FormatString(tokens)}");
+                                    break;
+                                case "001":
                                     ChangeNick(tokens[2]);
-                                    WriteLineA("main", $"* Your nickname is now {nickname}");
-                                }
-                            }
-                            if (tokens[1] == "JOIN")
-                            {
-                                string channelName = NoColon(tokens[2]).Remove(0, 1); // rem #
-                                if (NoColon(tokens[0]).Substring(0, nickname.Length).Equals(nickname))
-                                {
-                                    windows.Add(channelName);
-                                    ui.BeginInvoke(new InvokeDelegate1(MakeWindow), channelName);
-                                    WriteLineA(channelName, $"* You have joined #{channelName}");
-                                }
-                                else
-                                    if (windows.Contains(channelName))
-                                        WriteLineA(channelName, $"* {NoColon(tokens[0])} has joined #{channelName}");
-                            }
-                            if (tokens[1] == "PRIVMSG")
-                            {
-                                string channelName = tokens[2].Remove(0, 1);
-                                if (windows.Contains(channelName))
-                                {
-                                    WriteLineA(channelName, $"<span class=\"chat_nick\">&lt;{NoColon(tokens[0]).Split('!')[0]}&gt;</span> {NoColon(string.Join(" ", tokens.Skip(3).ToArray()))}");
-                                    ui.BeginInvoke(new InvokeDelegate1(ChannelListNotify), channelName);
-                                }
-                            }
-                            // topic
-                            if (tokens[1] == "332")
-                            {
-                                topics.Add(tokens[3].Remove(0, 1), NoColon(string.Join(" ", tokens.Skip(4).ToArray())));
-                                //if (windows.Contains(splitInput[3].Remove(0, 1)))
-                                //{
-                                //    WriteLineA(splitInput[3].Remove(0, 1), $"* Topic is: {NoColon(string.Join(" ", splitInput.Skip(4).ToArray()))}");
-                                //}
-                            }
-                            // userlist
-                            if (tokens[1] == "353")
-                            {
-                                string channelName = tokens[4].Remove(0, 1);
-                                if (windows.Contains(channelName))
-                                {
-                                    tokens[5] = NoColon(tokens[5]);
-                                    foreach (string u in tokens.Skip(5).Where(x => !string.IsNullOrEmpty(x)).ToArray())
-                                    //WriteLineA($"{channelName}_users", $"<span class=\"user_{u}\">{u}</span>");
+                                    break;
+                                case "NICK":
+                                    if (NoColon(tokens[0]).Substring(0, nickname.Length).Equals(nickname))
                                     {
-                                        ui.BeginInvoke(new InvokeDelegate(AddUserToList), channelName, u);
+                                        ChangeNick(tokens[2]);
+                                        WriteLineA("main", $"* Your nickname is now {nickname}");
                                     }
-                                }
-                            }
-
-                            if (tokens[1] == "001")
-                            {
-                                ChangeNick(tokens[2]);
-                            }
-                            if (tokens[1] == "QUIT")
-                            {
-                                string nick = NoColon(tokens[0]).Split('!')[0];
-                                ui.BeginInvoke(new InvokeDelegate1(RemoveFromUserList), nick);
-                            }
-                            if (inputLine.Length > 1)
-                            {
-                                if (SERVER_CODES.Contains(tokens[1]))
-                                {
-                                    WriteLineA("main", $"-<span class=\"notice_nick\">Server</span>- {FormatString(tokens)}");
-                                }
+                                    break;
+                                case "JOIN":
+                                    string channelName = NoColon(tokens[2]).Remove(0, 1); // rem #
+                                    if (NoColon(tokens[0]).Substring(0, nickname.Length).Equals(nickname))
+                                    {
+                                        windows.Add(channelName);
+                                        ui.BeginInvoke(new InvokeDelegate1(MakeWindow), channelName);
+                                        WriteLineA(channelName, $"<span class=\"info\">* You have joined #{channelName}</span>");
+                                    }
+                                    else
+                                        if (windows.Contains(channelName))
+                                            WriteLineA(channelName, $"<span class=\"info\">* {NoColon(tokens[0])} has joined #{channelName}</span>");
+                                    break;
+                                case "PART":
+                                    break;
+                                case "QUIT":
+                                    string nick = NoColon(tokens[0]).Split('!')[0];
+                                    ui.BeginInvoke(new InvokeDelegate1(RemoveFromUserList), nick);
+                                    break;
+                                case "PRIVMSG":
+                                    channelName = tokens[2].Remove(0, 1);
+                                    if (windows.Contains(channelName))
+                                    {
+                                        WriteLineA(channelName, $"<span class=\"chat_nick\">&lt;{NoColon(tokens[0]).Split('!')[0]}&gt;</span> {NoColon(string.Join(" ", tokens.Skip(3).ToArray()))}");
+                                        ui.BeginInvoke(new InvokeDelegate1(ChannelListNotify), channelName);
+                                    }
+                                    break;
+                                case "332": // topic
+                                    topics.Add(tokens[3].Remove(0, 1), NoColon(string.Join(" ", tokens.Skip(4).ToArray())));
+                                    break;
+                                case "353": // userlist
+                                    channelName = tokens[4].Remove(0, 1);
+                                    if (windows.Contains(channelName))
+                                    {
+                                        tokens[5] = NoColon(tokens[5]);
+                                        foreach (string u in tokens.Skip(5).Where(x => !string.IsNullOrEmpty(x)).ToArray())
+                                            ui.BeginInvoke(new InvokeDelegate(AddUserToList), channelName, u);
+                                    }
+                                    break;
+                                default:
+                                    if (tokens.Length > 2)
+                                        WriteLineA("main", $"-<span class=\"notice_nick\">Server</span>- {FormatString(tokens)}");
+                                    break;
                             }
                         }
                         writer.Close();
@@ -164,14 +149,8 @@ namespace IRC_Client
             {
                 isConnected = false;
                 Console.WriteLine(ex);
-                ui.BeginInvoke(new InvokeDelegate(WriteLine), "main", "* <span color='red'>DISCONNECTED</span>");
+                ui.BeginInvoke(new InvokeDelegate(WriteLine), "main", "<span class=\"info\">* DISCONNECTED</span>");
             }
-        }
-
-        private void ChangeNick(string nick)
-        {
-            nickname = NoColon(nick);
-            Text = $"IRC Client - {nickname}";
         }
 
         private void AddUserToList(string channelName, string u)
@@ -188,7 +167,7 @@ namespace IRC_Client
                 if (ui.Document.GetElementById($"{w}_{nick}") != null)
                 {
                     RemoveById($"{w}_{nick}");
-                    WriteLineA(w, $"* {nick} has quit");
+                    WriteLineA(w, $"<span class=\"info\">* {nick} has quit</span>");
                 }
         }
 
@@ -234,10 +213,16 @@ namespace IRC_Client
             }
         }
 
+        private void ChangeNick(string nick)
+        {
+            nickname = NoColon(nick);
+            Text = $"IRC Client - {nickname}";
+        }
+
         private void WriteLine(string window, string text)
         {
-            HtmlElement tmp = ui.Document.CreateElement("span");
-            tmp.InnerHtml = text + "<br>\n";
+            HtmlElement tmp = ui.Document.CreateElement("p");
+            tmp.InnerHtml = text + "\n";
             ui.Document.GetElementById(window).AppendChild(tmp);
             //webBrowser1.Document.Window.ScrollTo(0, webBrowser1.Document.Body.ScrollRectangle.Height);
             ui.Document.InvokeScript("scroll");
@@ -271,15 +256,6 @@ namespace IRC_Client
             return result;
         }
 
-        private void Resized(object sender, EventArgs e)
-        {
-            try
-            {
-                ui.Document.InvokeScript("scroll");
-            }
-            catch { }
-        }
-
         private void MakeWindow(string windowName)
         {
             HtmlElement channelDiv = ui.Document.CreateElement("div");
@@ -290,6 +266,7 @@ namespace IRC_Client
 
             HtmlElement channelLink = ui.Document.CreateElement("a");
             channelLink.SetAttribute("id", $"{windowName}_link");
+            channelLink.SetAttribute("className", "channel_link");
             channelLink.InnerHtml = $"#{windowName}";
             ui.Document.GetElementById("channel_list").AppendChild(channelLink);
             foreach (HtmlElement el in ui.Document.GetElementsByTagName("a"))
@@ -297,6 +274,11 @@ namespace IRC_Client
                 if (el.Id != null && el.Id.Equals($"{windowName}_link"))
                     el.AttachEventHandler("onclick", (sender1, e1) => ClickEventHandler(el, EventArgs.Empty));
             }
+            
+            /* HtmlElement channelX = ui.Document.CreateElement("span");
+            channelX.SetAttribute("className", "close");
+            channelX.InnerHtml = "X";
+            ui.Document.GetElementById($"{windowName}_link").AppendChild(channelX); */
 
             HtmlElement br = ui.Document.CreateElement("br");
             ui.Document.GetElementById("channel_list").AppendChild(br);
@@ -316,8 +298,7 @@ namespace IRC_Client
 
         public void ClickEventHandler(object sender, EventArgs e)
         {
-            var tmp = (HtmlElement)sender;
-            SwitchTo(tmp.InnerHtml.Remove(0, 1));
+            SwitchTo(((HtmlElement)sender).InnerHtml.Remove(0, 1));
         }
 
         public void SwitchTo(string window)
@@ -399,6 +380,15 @@ namespace IRC_Client
         private void button1_Click(object sender, EventArgs e)
         {
             Console.WriteLine(ui.Document.GetElementsByTagName("html")[0].InnerHtml);
+        }
+
+        private void Resized(object sender, EventArgs e)
+        {
+            try
+            {
+                ui.Document.InvokeScript("scroll");
+            }
+            catch { }
         }
 
         private void Closing(object sender, FormClosingEventArgs e)

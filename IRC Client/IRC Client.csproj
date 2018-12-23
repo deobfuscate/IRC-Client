@@ -84,8 +84,5 @@
   <ItemGroup>
     <EmbeddedResource Include="ui.html" />
   </ItemGroup>
-  <ItemGroup>
-    <EmbeddedResource Include="ui2.html" />
-  </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
 </Project>
