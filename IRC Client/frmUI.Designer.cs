@@ -1,6 +1,6 @@
 ﻿namespace IRC_Client
 {
-    partial class frmServer
+    partial class frmUI
     {
         /// <summary>
         /// Required designer variable.
@@ -28,17 +28,17 @@
         /// </summary>
         private void InitializeComponent()
         {
-            this.ui = new System.Windows.Forms.WebBrowser();
+            this.canvas = new System.Windows.Forms.WebBrowser();
             this.button1 = new System.Windows.Forms.Button();
             this.SuspendLayout();
             // 
             // ui
             // 
-            this.ui.Dock = System.Windows.Forms.DockStyle.Fill;
-            this.ui.Location = new System.Drawing.Point(0, 0);
-            this.ui.Name = "ui";
-            this.ui.Size = new System.Drawing.Size(1058, 653);
-            this.ui.TabIndex = 5;
+            this.canvas.Dock = System.Windows.Forms.DockStyle.Fill;
+            this.canvas.Location = new System.Drawing.Point(0, 0);
+            this.canvas.Name = "ui";
+            this.canvas.Size = new System.Drawing.Size(1058, 653);
+            this.canvas.TabIndex = 5;
             // 
             // button1
             // 
@@ -55,7 +55,7 @@
             this.AutoScaleDimensions = new System.Drawing.SizeF(6F, 13F);
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
             this.ClientSize = new System.Drawing.Size(1058, 653);
-            this.Controls.Add(this.ui);
+            this.Controls.Add(this.canvas);
             this.Controls.Add(this.button1);
             this.DataBindings.Add(new System.Windows.Forms.Binding("Location", global::IRC_Client.Properties.Settings.Default, "Location", true, System.Windows.Forms.DataSourceUpdateMode.OnPropertyChanged));
             this.Location = global::IRC_Client.Properties.Settings.Default.Location;
@@ -69,7 +69,7 @@
         }
 
         #endregion
-        private System.Windows.Forms.WebBrowser ui;
+        private System.Windows.Forms.WebBrowser canvas;
         private System.Windows.Forms.Button button1;
     }
 }
