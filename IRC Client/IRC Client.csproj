@@ -83,7 +83,16 @@
     <None Include="App.config" />
   </ItemGroup>
   <ItemGroup>
-    <EmbeddedResource Include="ui.html" />
+    <EmbeddedResource Include="resources\ui.html" />
+  </ItemGroup>
+  <ItemGroup>
+    <EmbeddedResource Include="resources\default_styles.css" />
+  </ItemGroup>
+  <ItemGroup>
+    <EmbeddedResource Include="resources\layout.css" />
+  </ItemGroup>
+  <ItemGroup>
+    <EmbeddedResource Include="resources\scripts.js" />
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
 </Project>

@@ -1,0 +1,33 @@
+﻿body {
+    background-color: #36393f;
+    color: white;
+    font-family: Courier New, Courier, Lucida Sans Typewriter, Lucida Typewriter, monospace;
+}
+
+.notice_nick {
+    color: #808080;
+}
+
+.chat_nick {
+    color: #808080;
+}
+
+.channels_unread {
+    color: red;
+}
+
+.sidel {
+    background-color: rgba(0,0,0,.1)
+}
+
+.sider {
+    background-color: rgba(0,0,0,.1)
+}
+
+#header {
+    background-color: rgba(0,0,0,.1)
+}
+
+.info {
+    color: #808080;
+}

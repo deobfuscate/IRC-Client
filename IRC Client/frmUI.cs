@@ -27,17 +27,27 @@ namespace IRC_Client
             InitializeComponent();
             CheckForIllegalCrossThreadCalls = false;
             Size = Properties.Settings.Default.FormSize;
+            if (!File.Exists("styles.css"))
+                File.WriteAllText("styles.css", ReadEmbeddedFile("default_styles.css"));
             ChangeNick(Properties.Settings.Default.nick);
             canvas.DocumentText = "0";
             canvas.Document.OpenNew(true);
             canvas.ObjectForScripting = this;
             canvas.Document.Write(ReadEmbeddedFile("ui.html"));
-            // Load external CSS file
-            HtmlElement css = canvas.Document.CreateElement("link");
+            // Load internal layout CSS file
+            HtmlElement css = canvas.Document.CreateElement("style");
+            css.InnerHtml = ReadEmbeddedFile("layout.css");
+            canvas.Document.GetElementsByTagName("head")[0].AppendChild(css);
+            // Load external user CSS file
+            css = canvas.Document.CreateElement("link");
             css.SetAttribute("rel", "stylesheet");
             css.SetAttribute("type", "text/css");
             css.SetAttribute("href", $"file://{Directory.GetCurrentDirectory()}/styles.css");
             canvas.Document.GetElementsByTagName("head")[0].AppendChild(css);
+            // Load internal JS file
+            HtmlElement js = canvas.Document.CreateElement("script");
+            js.InnerHtml = ReadEmbeddedFile("scripts.js");
+            canvas.Document.GetElementsByTagName("head")[0].AppendChild(js);
             SwitchTo("main");
             //webBrowser1.Document.Window.ScrollTo(0, webBrowser1.Document.Body.ScrollRectangle.Height);
         }
@@ -67,7 +77,7 @@ namespace IRC_Client
             }
             else
             {
-                if (irc.isConnected && !activeWindow.Equals("main"))
+                if (irc != null && irc.isConnected && !activeWindow.Equals("main"))
                 {
                     irc.Write($"PRIVMSG #{activeWindow} :{input}");
                     WriteLine(activeWindow, $"<span class=\"chat_nick\">&lt;{nickname}&gt;</span> {input}");
@@ -284,7 +294,7 @@ namespace IRC_Client
         private string ReadEmbeddedFile(string file)
         {
             string result;
-            using (Stream stream = Assembly.GetExecutingAssembly().GetManifestResourceStream($"IRC_Client.{file}"))
+            using (Stream stream = Assembly.GetExecutingAssembly().GetManifestResourceStream($"IRC_Client.resources.{file}"))
             using (StreamReader reader = new StreamReader(stream))
             {
                 result = reader.ReadToEnd();
