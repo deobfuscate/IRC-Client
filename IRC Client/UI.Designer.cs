@@ -1,6 +1,6 @@
 ﻿namespace IRC_Client
 {
-    partial class frmUI
+    partial class UI
     {
         /// <summary>
         /// Required designer variable.
@@ -32,11 +32,11 @@
             this.button1 = new System.Windows.Forms.Button();
             this.SuspendLayout();
             // 
-            // ui
+            // canvas
             // 
             this.canvas.Dock = System.Windows.Forms.DockStyle.Fill;
             this.canvas.Location = new System.Drawing.Point(0, 0);
-            this.canvas.Name = "ui";
+            this.canvas.Name = "canvas";
             this.canvas.Size = new System.Drawing.Size(1058, 653);
             this.canvas.TabIndex = 5;
             // 
@@ -50,7 +50,7 @@
             this.button1.UseVisualStyleBackColor = true;
             this.button1.Click += new System.EventHandler(this.button1_Click);
             // 
-            // frmServer
+            // UI
             // 
             this.AutoScaleDimensions = new System.Drawing.SizeF(6F, 13F);
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
@@ -60,7 +60,7 @@
             this.DataBindings.Add(new System.Windows.Forms.Binding("Location", global::IRC_Client.Properties.Settings.Default, "Location", true, System.Windows.Forms.DataSourceUpdateMode.OnPropertyChanged));
             this.Location = global::IRC_Client.Properties.Settings.Default.Location;
             this.MinimumSize = new System.Drawing.Size(725, 432);
-            this.Name = "frmServer";
+            this.Name = "UI";
             this.Text = "IRC  Client";
             this.FormClosing += new System.Windows.Forms.FormClosingEventHandler(this.Closing);
             this.Resize += new System.EventHandler(this.Resized);

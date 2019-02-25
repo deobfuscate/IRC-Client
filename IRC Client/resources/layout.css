@@ -5,6 +5,8 @@
 
 p {
     margin: 0px;
+    padding-left: 2em;
+    text-indent: -2em;
 }
 
 .sidel {
@@ -87,6 +89,9 @@ p {
     display: block;
     padding-top: 5px;
     padding-left: 5px;
+    margin-top: 10px;
+    margin-bottom: 10px;
+    -ms-user-select: none;
 }
 
 .channel_link .close {

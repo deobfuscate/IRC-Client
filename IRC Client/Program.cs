@@ -13,7 +13,7 @@ namespace IRC_Client
         {
             Application.EnableVisualStyles();
             Application.SetCompatibleTextRenderingDefault(false);
-            Application.Run(new frmUI());
+            Application.Run(new UI());
         }
     }
 }

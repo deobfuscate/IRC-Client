@@ -1,5 +1,6 @@
 ﻿body {
-    background-color: #36393f;
+    /*background-color: #36393f;*/
+    background-color: #2a2a2a;
     color: white;
     font-family: Courier New, Courier, Lucida Sans Typewriter, Lucida Typewriter, monospace;
 }
@@ -17,17 +18,24 @@
 }
 
 .sidel {
-    background-color: rgba(0,0,0,.1)
+    /*background-color: rgba(0,0,0,.1)*/
+    background-color: #1f1f1f;
 }
 
 .sider {
-    background-color: rgba(0,0,0,.1)
+    /*background-color: rgba(0,0,0,.1)*/
+    background-color: #1f1f1f;
 }
 
 #header {
-    background-color: rgba(0,0,0,.1)
+    /*background-color: rgba(0,0,0,.1)*/
+    background-color: #1f1f1f;
 }
 
 .info {
     color: #808080;
 }
+/* extra
+    #262a2d dark blue
+    #2B333B lighter blue
+*/

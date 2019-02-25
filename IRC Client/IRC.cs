@@ -19,83 +19,88 @@ namespace IRC_Client
 
         private void CallbackMethod(IAsyncResult ar)
         {
-            try
-            {
-                isConnected = false;
-                TcpClient tcpclient = ar.AsyncState as TcpClient;
+            isConnected = false;
+            TcpClient tcpclient = ar.AsyncState as TcpClient;
 
-                if (tcpclient.Client != null)
+            if (tcpclient.Client != null)
+            {
+                try
                 {
                     tcpclient.EndConnect(ar);
-                    isConnected = true;
-
-                    NetworkStream stream = tcpclient.GetStream();
-                    StreamReader reader = new StreamReader(stream);
-                    writer = new StreamWriter(stream);
-                    string inputLine;
-                    writer.WriteLine("USER default 0 * :default");
-                    writer.Flush();
-                    writer.WriteLine($"NICK {nickname}");
-                    writer.Flush();
-                    while (true)
-                    {
-                        while ((inputLine = reader.ReadLine()) != null)
-                        {
-                            Console.WriteLine("<- " + inputLine);
-                            string[] tokens = inputLine.Split(new char[] { ' ' });
-                            if (tokens.Length < 2) continue;
-                            if (tokens[0] == "PING")
-                            {
-                                string key = tokens[1];
-                                Console.WriteLine("-> PONG " + key);
-                                writer.WriteLine("PONG " + key);
-                                writer.Flush();
-                                continue;
-                            }
-                            switch (tokens[1])
-                            {
-                                /*case "001":
-                                    ChangeNick(tokens[2]);
-                                    break;*/
-                                case "NOTICE":
-                                    RaiseNoticeEvent(new TokenEventArgs(tokens));
-                                    break;
-                                case "NICK":
-                                    RaiseNickEvent(new TokenEventArgs(tokens));
-                                    break;
-                                case "JOIN":
-                                    RaiseJoinEvent(new TokenEventArgs(tokens));
-                                    break;
-                                case "PART":
-                                    break;
-                                case "QUIT":
-                                    RaiseQuitEvent(new TokenEventArgs(tokens));
-                                    break;
-                                case "PRIVMSG":
-                                    RaisePrivMsgEvent(new TokenEventArgs(tokens));
-                                    break;
-                                case "332": // topic
-                                    RaiseTopicEvent(new TokenEventArgs(tokens));
-                                    break;
-                                case "353": // userlist
-                                    RaiseUserEvent(new TokenEventArgs(tokens));
-                                    break;
-                                default:
-                                    RaiseDefaultEvent(new TokenEventArgs(tokens));
-                                    break;
-                            }
-                        }
-                        writer.Close();
-                        reader.Close();
-                        tcpclient.Close();
-                    }
                 }
-            }
-            catch (Exception ex)
-            {
-                isConnected = false;
-                Console.WriteLine(ex);
-                OnDisconnect(EventArgs.Empty);
+                catch (SocketException ex)
+                {
+                    RaiseSocketExceptionEvent(new TokenEventArgs(new string[] { "main", ex.Message }));
+                    return;
+                }
+                isConnected = true;
+
+                NetworkStream stream = tcpclient.GetStream();
+                StreamReader reader = new StreamReader(stream);
+                writer = new StreamWriter(stream);
+                string inputLine;
+                writer.WriteLine("USER default 0 * :default");
+                writer.Flush();
+                writer.WriteLine($"NICK {nickname}");
+                writer.Flush();
+                while (true)
+                {
+                    while (tcpclient.Connected && (inputLine = reader.ReadLine()) != null)
+                    {
+                        Console.WriteLine("<- " + inputLine);
+                        string[] tokens = inputLine.Split(new char[] { ' ' });
+                        if (tokens.Length < 2) continue;
+                        if (tokens[0] == "PING")
+                        {
+                            string key = tokens[1];
+                            Console.WriteLine("-> PONG " + key);
+                            writer.WriteLine("PONG " + key);
+                            writer.Flush();
+                            continue;
+                        }
+                        switch (tokens[1])
+                        {
+                            /*case "001":
+                                ChangeNick(tokens[2]);
+                                break;*/
+                            case "PRIVMSG":
+                                RaisePrivMsgEvent(new TokenEventArgs(tokens));
+                                break;
+                            case "NOTICE":
+                                RaiseNoticeEvent(new TokenEventArgs(tokens));
+                                break;
+                            case "NICK":
+                                RaiseNickEvent(new TokenEventArgs(tokens));
+                                break;
+                            case "JOIN":
+                                RaiseJoinEvent(new TokenEventArgs(tokens));
+                                break;
+                            case "PART":
+                                RaisePartEvent(new TokenEventArgs(tokens));
+                                break;
+                            case "QUIT":
+                                RaiseQuitEvent(new TokenEventArgs(tokens));
+                                break;
+                            case "MODE":
+                                RaiseModeEvent(new TokenEventArgs(tokens));
+                                break;
+                            case "332": // topic
+                                RaiseTopicEvent(new TokenEventArgs(tokens));
+                                break;
+                            case "353": // userlist
+                                RaiseUserEvent(new TokenEventArgs(tokens));
+                                break;
+                            default:
+                                RaiseDefaultEvent(new TokenEventArgs(tokens));
+                                break;
+                        }
+                    }
+                    writer.Close();
+                    reader.Close();
+                    tcpclient.Close();
+                    isConnected = false;
+                    RaiseDisconnectEvent(EventArgs.Empty);
+                }
             }
         }
 
@@ -104,9 +109,15 @@ namespace IRC_Client
             writer.WriteLine(input);
             writer.Flush();
         }
-
-
+        
         // Events
+
+        public event EventHandler<TokenEventArgs> PrivMsgEvent;
+        protected virtual void RaisePrivMsgEvent(TokenEventArgs e)
+        {
+            PrivMsgEvent?.Invoke(this, e);
+        }
+
         public event EventHandler<TokenEventArgs> NoticeEvent;
         protected virtual void RaiseNoticeEvent(TokenEventArgs e)
         {
@@ -131,12 +142,6 @@ namespace IRC_Client
             QuitEvent?.Invoke(this, e);
         }
 
-        public event EventHandler<TokenEventArgs> PrivMsgEvent;
-        protected virtual void RaisePrivMsgEvent(TokenEventArgs e)
-        {
-            PrivMsgEvent?.Invoke(this, e);
-        }
-
         public event EventHandler<TokenEventArgs> TopicEvent;
         protected virtual void RaiseTopicEvent(TokenEventArgs e)
         {
@@ -155,13 +160,31 @@ namespace IRC_Client
             DefaultEvent?.Invoke(this, e);
         }
 
-        public event EventHandler Disconnect;
-        protected virtual void OnDisconnect(EventArgs e)
+        public event EventHandler<TokenEventArgs> PartEvent;
+        protected virtual void RaisePartEvent(TokenEventArgs e)
         {
-            Disconnect?.Invoke(this, e);
+            PartEvent?.Invoke(this, e);
+        }
+
+        public event EventHandler<TokenEventArgs> ModeEvent;
+        protected virtual void RaiseModeEvent(TokenEventArgs e)
+        {
+            ModeEvent?.Invoke(this, e);
+        }
+
+        public event EventHandler<TokenEventArgs> SocketExceptionEvent;
+        protected virtual void RaiseSocketExceptionEvent(TokenEventArgs e)
+        {
+            SocketExceptionEvent?.Invoke(this, e);
+        }
+        
+        public event EventHandler DisconnectEvent;
+        protected virtual void RaiseDisconnectEvent(EventArgs e)
+        {
+            DisconnectEvent?.Invoke(this, e);
         }
     }
-    
+
     public class TokenEventArgs : EventArgs
     {
         public string[] tokens;
