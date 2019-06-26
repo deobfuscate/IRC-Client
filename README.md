@@ -1,5 +1,5 @@
 # IRC Web Client
-A simple IRC client made in C#. The goal of this project was to take an old protocol like IRC and made a more modern client like other chat clients such as Discord. On the networking side the IRC connections are made using asynchronous TCP sockets. The IRC interpreter is a custom one written using C#'s event handling. The UI is rendered to an HTML canvas rather than a text box or a rich text box, giving more control over how the information is displayed.
+An IRC client made in C#. The goal of this project is to take an old protocol like IRC and make a more modern client, like other chat clients such as Discord. On the networking side the IRC connections are made using asynchronous TCP sockets. The IRC interpreter is a custom one written using C#'s event handling. The UI is rendered to an HTML canvas rather than a text box or a rich text box, giving more control over how the information is displayed.
 
 ## Screenshots
 ![IRC Client](ss1.jpg?raw=true "IRC Client")
