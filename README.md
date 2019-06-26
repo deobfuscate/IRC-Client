@@ -8,6 +8,7 @@ An IRC client made in C#. The goal of this project is to take an old protocol li
 
 ## Functionality
 * Ability to connect to IRC servers and conversate in various channels
+* Ability for the user to customize the UI by using their own CSS stylesheet
 * Channel notify of missed messages
 * Saved UI positioning
 
