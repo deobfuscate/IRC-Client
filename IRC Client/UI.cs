@@ -127,6 +127,7 @@ namespace IRC_Client
                 {
                     string nick = NoColon(e.tokens[0]).Split('!')[0];
                     WriteLineA(channelName, $"<span class=\"info\">* {nick} has joined #{channelName}</span>");
+                // line below needs to be abstracted
                     HtmlElement ul = canvas.Document.CreateElement("li");
                     ul.SetAttribute("id", $"{channelName}_{nick}");
                     ul.InnerHtml = $"{nick}";
