@@ -34,7 +34,9 @@
             // 
             // canvas
             // 
-            this.canvas.Dock = System.Windows.Forms.DockStyle.Fill;
+            this.canvas.Anchor = ((System.Windows.Forms.AnchorStyles)((((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Bottom) 
+            | System.Windows.Forms.AnchorStyles.Left) 
+            | System.Windows.Forms.AnchorStyles.Right)));
             this.canvas.Location = new System.Drawing.Point(0, 0);
             this.canvas.Name = "canvas";
             this.canvas.Size = new System.Drawing.Size(1058, 653);
@@ -54,6 +56,7 @@
             // 
             this.AutoScaleDimensions = new System.Drawing.SizeF(6F, 13F);
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
+            this.BackColor = System.Drawing.Color.FromArgb(((int)(((byte)(31)))), ((int)(((byte)(31)))), ((int)(((byte)(31)))));
             this.ClientSize = new System.Drawing.Size(1058, 653);
             this.Controls.Add(this.canvas);
             this.Controls.Add(this.button1);

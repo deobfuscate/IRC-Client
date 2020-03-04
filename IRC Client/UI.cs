@@ -127,11 +127,7 @@ namespace IRC_Client
                 {
                     string nick = NoColon(e.tokens[0]).Split('!')[0];
                     WriteLineA(channelName, $"<span class=\"info\">* {nick} has joined #{channelName}</span>");
-                // line below needs to be abstracted
-                    HtmlElement ul = canvas.Document.CreateElement("li");
-                    ul.SetAttribute("id", $"{channelName}_{nick}");
-                    ul.InnerHtml = $"{nick}";
-                    canvas.Document.GetElementById($"{channelName}_users_list").AppendChild(ul);
+                    canvas.BeginInvoke(new InvokeDelegate(AddUserToList), channelName, nick);
                 }
         }
 
@@ -164,11 +160,16 @@ namespace IRC_Client
             if (nick.Equals(nickname))
                 WriteLineA(win, $"<span class=\"info\">* You have left #{win}</span>");
             else
-                if (canvas.Document.GetElementById($"{win}_{nick}") != null)
-                {
-                    RemoveById($"{win}_{nick}");
-                    WriteLineA(win, $"<span class=\"info\">* {nick} has left #{win}</span>");
-                }
+                canvas.BeginInvoke(new InvokeDelegate(OtherUserParted), nick, win);
+        }
+
+        private void OtherUserParted(string nick, string win)
+        {
+            if (canvas.Document.GetElementById($"{win}_{nick}") != null)
+            {
+                RemoveById($"{win}_{nick}");
+                WriteLineA(win, $"<span class=\"info\">* {nick} has left #{win}</span>");
+            }
         }
 
         private void OnPrivMsg(object sender, TokenEventArgs e)
@@ -248,7 +249,8 @@ namespace IRC_Client
         private void WriteLine(string window, string text)
         {
             HtmlElement tmp = canvas.Document.CreateElement("p");
-            tmp.InnerHtml = text + "\n";
+            tmp.InnerHtml = text;
+            canvas.Document.Write("\n");
             canvas.Document.GetElementById(window).AppendChild(tmp);
             //webBrowser1.Document.Window.ScrollTo(0, webBrowser1.Document.Body.ScrollRectangle.Height);
             canvas.Document.InvokeScript("scroll");
@@ -425,7 +427,7 @@ namespace IRC_Client
             catch { }
         }
 
-        private void Closing(object sender, FormClosingEventArgs e)
+        private new void Closing(object sender, FormClosingEventArgs e)
         {
             Properties.Settings.Default.nick = nickname;
             Properties.Settings.Default.FormSize = Size;

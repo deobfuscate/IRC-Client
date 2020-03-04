@@ -1,4 +1,5 @@
 ﻿var cs = window.external;
+
 function send() {
     // Enter key pressed
     if (event.keyCode == 13) {
