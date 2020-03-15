@@ -27,6 +27,7 @@ namespace IRC_Client
             InitializeComponent();
             CheckForIllegalCrossThreadCalls = false;
             Size = Properties.Settings.Default.FormSize;
+            WindowState = Properties.Settings.Default.WindowState;
             if (!File.Exists("styles.css"))
                 File.WriteAllText("styles.css", ReadEmbeddedFile("default_styles.css"));
             ChangeNick(Properties.Settings.Default.nick);
@@ -413,11 +414,6 @@ namespace IRC_Client
                     yield return e;
         }
 
-        private void button1_Click(object sender, EventArgs e)
-        {
-            Console.WriteLine(canvas.Document.GetElementsByTagName("html")[0].InnerHtml);
-        }
-
         private void Resized(object sender, EventArgs e)
         {
             try
@@ -427,11 +423,24 @@ namespace IRC_Client
             catch { }
         }
 
+        #if DEBUG
+        protected override bool ProcessCmdKey(ref Message msg, Keys keyData)
+        {
+            if (keyData == (Keys.F1)) // print entire HTML DOM document to console
+            {
+                Console.WriteLine(canvas.Document.GetElementsByTagName("html")[0].InnerHtml);
+                return true;
+            }
+            return base.ProcessCmdKey(ref msg, keyData);
+        }
+        #endif
+
         private new void Closing(object sender, FormClosingEventArgs e)
         {
             Properties.Settings.Default.nick = nickname;
             Properties.Settings.Default.FormSize = Size;
             Properties.Settings.Default.Location = Location;
+            Properties.Settings.Default.WindowState = WindowState;
             Properties.Settings.Default.Save();
         }
     }
