@@ -12,7 +12,7 @@ An IRC client made in C#. The goal of this project is to take an old protocol li
 * Channel notify of missed messages
 * Saved UI positioning
 
-## Technologies used
+## Technologies Used
 * C Sharp
 * HTML
 * CSS
