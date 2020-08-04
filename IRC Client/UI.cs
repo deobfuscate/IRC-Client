@@ -418,7 +418,7 @@ namespace IRC_Client
         {
             try
             {
-                canvas.Document.InvokeScript("scroll");
+                if (canvas.Document != null) canvas.Document.InvokeScript("scroll");
             }
             catch { }
         }
