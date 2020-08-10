@@ -186,9 +186,8 @@ namespace IRC_Client
         private void ChannelListNotify(string channelName)
         {
             string currentClass = canvas.Document.GetElementById($"{channelName}_link").GetAttribute("className");
-            if (!activeWindow.Equals(channelName))
-                if (!currentClass.Contains("channels_unread"))
-                    canvas.Document.GetElementById($"{channelName}_link").SetAttribute("className", currentClass + " channels_unread");
+            if (!activeWindow.Equals(channelName) && !currentClass.Contains("channels_unread"))
+                canvas.Document.GetElementById($"{channelName}_link").SetAttribute("className", currentClass + " channels_unread");
         }
 
         private void OnMode(object sender, TokenEventArgs e)
@@ -226,9 +225,8 @@ namespace IRC_Client
 
         private void OnDefault(object sender, TokenEventArgs e)
         {
-            if (!(new List<String>() { "470", "333", "328", "366" }).Contains(e.tokens[1]))
-                if (e.tokens.Length > 2)
-                    WriteLineA("main", $"-<span class=\"notice_nick\">Server</span>- {FormatString(e.tokens)}");
+            if (!new List<string>() { "470", "333", "328", "366" }.Contains(e.tokens[1]) && e.tokens.Length > 2)
+                WriteLineA("main", $"-<span class=\"notice_nick\">Server</span>- {FormatString(e.tokens)}");
         }
 
         private void OnDisconnect(object sender, EventArgs e)
@@ -292,10 +290,10 @@ namespace IRC_Client
                     el.AttachEventHandler("onclick", (sender1, e1) => ClickEventHandler(el, EventArgs.Empty));
             }
 
-            /* HtmlElement channelX = ui.Document.CreateElement("span");
+            HtmlElement channelX = canvas.Document.CreateElement("span");
             channelX.SetAttribute("className", "close");
             channelX.InnerHtml = "X";
-            ui.Document.GetElementById($"{windowName}_link").AppendChild(channelX); */
+            canvas.Document.GetElementById($"{windowName}_link").AppendChild(channelX); 
 
             HtmlElement userDiv = canvas.Document.CreateElement("div");
             userDiv.SetAttribute("id", $"{windowName}_users");
@@ -317,27 +315,26 @@ namespace IRC_Client
 
         public void SwitchTo(string window)
         {
-            if (windows.Contains(window))
+            if (!windows.Contains(window)) return;
+            
+            foreach (var w in windows)
             {
-                foreach (var w in windows)
-                {
-                    canvas.Document.GetElementById(w).Style = "display:none";
-                    canvas.Document.GetElementById($"{w}_users").Style = "display:none";
-                }
-                canvas.Document.GetElementById(window).Style = "display:block";
-                canvas.Document.GetElementById($"{window}_users").Style = "display:block";
-                // todo: add scroll
-                activeWindow = window;
-
-                // unread channel message notify
-                if (!window.Equals("main"))
-                    if (canvas.Document.GetElementById($"{window}_link").GetAttribute("className").Contains("channels_unread"))
-                        canvas.Document.GetElementById($"{window}_link").SetAttribute("className", "channel_link");
-
-                // update topic
-                if (topics.ContainsKey(window))
-                    canvas.Document.GetElementById("topic").InnerHtml = (activeWindow.Equals("main")) ? topics[window] : $"#{window} | {topics[window]}";
+                canvas.Document.GetElementById(w).Style = "display:none";
+                canvas.Document.GetElementById($"{w}_users").Style = "display:none";
             }
+            canvas.Document.GetElementById(window).Style = "display:block";
+            canvas.Document.GetElementById($"{window}_users").Style = "display:block";
+            // todo: add scroll
+            activeWindow = window;
+
+            // unread channel message notify
+            if (!window.Equals("main") && canvas.Document.GetElementById($"{window}_link").GetAttribute("className").Contains("channels_unread"))
+                canvas.Document.GetElementById($"{window}_link").SetAttribute("className", "channel_link");
+
+            // update topic
+            if (topics.ContainsKey(window))
+                canvas.Document.GetElementById("topic").InnerHtml = (activeWindow.Equals("main")) ? topics[window] : $"#{window} | {topics[window]}";
+            
         }
 
         private string ReadEmbeddedFile(string file)
