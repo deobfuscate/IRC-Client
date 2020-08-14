@@ -22,85 +22,83 @@ namespace IRC_Client
             isConnected = false;
             TcpClient tcpclient = ar.AsyncState as TcpClient;
 
-            if (tcpclient.Client != null)
+            if (tcpclient.Client == null) return;
+            try
             {
-                try
-                {
-                    tcpclient.EndConnect(ar);
-                }
-                catch (SocketException ex)
-                {
-                    RaiseSocketExceptionEvent(new TokenEventArgs(new string[] { "main", ex.Message }));
-                    return;
-                }
-                isConnected = true;
+                tcpclient.EndConnect(ar);
+            }
+            catch (SocketException ex)
+            {
+                RaiseSocketExceptionEvent(new TokenEventArgs(new string[] { "main", ex.Message }));
+                return;
+            }
+            isConnected = true;
 
-                NetworkStream stream = tcpclient.GetStream();
-                StreamReader reader = new StreamReader(stream);
-                writer = new StreamWriter(stream);
-                string inputLine;
-                writer.WriteLine("USER default 0 * :default");
-                writer.Flush();
-                writer.WriteLine($"NICK {nickname}");
-                writer.Flush();
-                while (true)
+            NetworkStream stream = tcpclient.GetStream();
+            StreamReader reader = new StreamReader(stream);
+            writer = new StreamWriter(stream);
+            string inputLine;
+            writer.WriteLine("USER default 0 * :default");
+            writer.Flush();
+            writer.WriteLine($"NICK {nickname}");
+            writer.Flush();
+            while (true)
+            {
+                while (tcpclient.Connected && (inputLine = reader.ReadLine()) != null)
                 {
-                    while (tcpclient.Connected && (inputLine = reader.ReadLine()) != null)
+                    Console.WriteLine("<- " + inputLine);
+                    string[] tokens = inputLine.Split(new char[] { ' ' });
+                    if (tokens.Length < 2) continue;
+                    if (tokens[0] == "PING")
                     {
-                        Console.WriteLine("<- " + inputLine);
-                        string[] tokens = inputLine.Split(new char[] { ' ' });
-                        if (tokens.Length < 2) continue;
-                        if (tokens[0] == "PING")
-                        {
-                            string key = tokens[1];
-                            Console.WriteLine("-> PONG " + key);
-                            writer.WriteLine("PONG " + key);
-                            writer.Flush();
-                            continue;
-                        }
-                        switch (tokens[1])
-                        {
-                            /*case "001":
-                                ChangeNick(tokens[2]);
-                                break;*/
-                            case "PRIVMSG":
-                                RaisePrivMsgEvent(new TokenEventArgs(tokens));
-                                break;
-                            case "NOTICE":
-                                RaiseNoticeEvent(new TokenEventArgs(tokens));
-                                break;
-                            case "NICK":
-                                RaiseNickEvent(new TokenEventArgs(tokens));
-                                break;
-                            case "JOIN":
-                                RaiseJoinEvent(new TokenEventArgs(tokens));
-                                break;
-                            case "PART":
-                                RaisePartEvent(new TokenEventArgs(tokens));
-                                break;
-                            case "QUIT":
-                                RaiseQuitEvent(new TokenEventArgs(tokens));
-                                break;
-                            case "MODE":
-                                RaiseModeEvent(new TokenEventArgs(tokens));
-                                break;
-                            case "332": // topic
-                                RaiseTopicEvent(new TokenEventArgs(tokens));
-                                break;
-                            case "353": // userlist
-                                RaiseUserEvent(new TokenEventArgs(tokens));
-                                break;
-                            default:
-                                RaiseDefaultEvent(new TokenEventArgs(tokens));
-                                break;
-                        }
+                        string key = tokens[1];
+                        Console.WriteLine("-> PONG " + key);
+                        writer.WriteLine("PONG " + key);
+                        writer.Flush();
+                        continue;
                     }
-                    writer.Close();
-                    reader.Close();
-                    tcpclient.Close();
-                    isConnected = false;
-                    RaiseDisconnectEvent(EventArgs.Empty);
+                    switch (tokens[1])
+                    {
+                        /*case "001":
+                            ChangeNick(tokens[2]);
+                            break;*/
+                        case "PRIVMSG":
+                            RaisePrivMsgEvent(new TokenEventArgs(tokens));
+                            break;
+                        case "NOTICE":
+                            RaiseNoticeEvent(new TokenEventArgs(tokens));
+                            break;
+                        case "NICK":
+                            RaiseNickEvent(new TokenEventArgs(tokens));
+                            break;
+                        case "JOIN":
+                            RaiseJoinEvent(new TokenEventArgs(tokens));
+                            break;
+                        case "PART":
+                            RaisePartEvent(new TokenEventArgs(tokens));
+                            break;
+                        case "QUIT":
+                            RaiseQuitEvent(new TokenEventArgs(tokens));
+                            break;
+                        case "MODE":
+                            RaiseModeEvent(new TokenEventArgs(tokens));
+                            break;
+                        case "332": // topic
+                            RaiseTopicEvent(new TokenEventArgs(tokens));
+                            break;
+                        case "353": // userlist
+                            RaiseUserEvent(new TokenEventArgs(tokens));
+                            break;
+                        default:
+                            RaiseDefaultEvent(new TokenEventArgs(tokens));
+                            break;
+                    }
                 }
+                writer.Close();
+                reader.Close();
+                tcpclient.Close();
+                isConnected = false;
+                RaiseDisconnectEvent(EventArgs.Empty);
             }
         }
 
