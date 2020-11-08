@@ -290,10 +290,10 @@ namespace IRC_Client
                     el.AttachEventHandler("onclick", (sender1, e1) => ClickEventHandler(el, EventArgs.Empty));
             }
 
-            HtmlElement channelX = canvas.Document.CreateElement("span");
+            /*HtmlElement channelX = canvas.Document.CreateElement("span");
             channelX.SetAttribute("className", "close");
             channelX.InnerHtml = "X";
-            canvas.Document.GetElementById($"{windowName}_link").AppendChild(channelX); 
+            canvas.Document.GetElementById($"{windowName}_link").AppendChild(channelX);*/
 
             HtmlElement userDiv = canvas.Document.CreateElement("div");
             userDiv.SetAttribute("id", $"{windowName}_users");
