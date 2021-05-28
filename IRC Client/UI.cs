@@ -157,19 +157,19 @@ namespace IRC_Client
         private void OnPart(object sender, TokenEventArgs e)
         {
             string nick = NoColon(e.tokens[0]).Split('!')[0];
-            string win = e.tokens[2].Remove(0, 1);
+            string window = e.tokens[2].Remove(0, 1);
             if (nick.Equals(nickname))
-                WriteLineA(win, $"<span class=\"info\">* You have left #{win}</span>");
+                WriteLineA(window, $"<span class=\"info\">* You have left #{window}</span>");
             else
-                canvas.BeginInvoke(new InvokeDelegate(OtherUserParted), nick, win);
+                canvas.BeginInvoke(new InvokeDelegate(OtherUserParted), nick, window);
         }
 
-        private void OtherUserParted(string nick, string win)
+        private void OtherUserParted(string nick, string window)
         {
-            if (canvas.Document.GetElementById($"{win}_{nick}") != null)
+            if (canvas.Document.GetElementById($"{window}_{nick}") != null)
             {
-                RemoveById($"{win}_{nick}");
-                WriteLineA(win, $"<span class=\"info\">* {nick} has left #{win}</span>");
+                RemoveById($"{window}_{nick}");
+                WriteLineA(window, $"<span class=\"info\">* {nick} has left #{window}</span>");
             }
         }
 
@@ -217,10 +217,10 @@ namespace IRC_Client
 
         private void AddUserToList(string channelName, string u)
         {
-            HtmlElement ul = canvas.Document.CreateElement("li");
-            ul.SetAttribute("id", $"{channelName}_{u}");
-            ul.InnerHtml = $"{u}";
-            canvas.Document.GetElementById($"{channelName}_users_list").AppendChild(ul);
+            HtmlElement userItem = canvas.Document.CreateElement("li");
+            userItem.SetAttribute("id", $"{channelName}_{u}");
+            userItem.InnerHtml = $"{u}";
+            canvas.Document.GetElementById($"{channelName}_users_list").AppendChild(userItem);
         }
 
         private void OnDefault(object sender, TokenEventArgs e)
@@ -290,6 +290,7 @@ namespace IRC_Client
                     el.AttachEventHandler("onclick", (sender1, e1) => ClickEventHandler(el, EventArgs.Empty));
             }
 
+            // close button
             /*HtmlElement channelX = canvas.Document.CreateElement("span");
             channelX.SetAttribute("className", "close");
             channelX.InnerHtml = "X";
