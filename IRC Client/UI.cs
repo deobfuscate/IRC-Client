@@ -15,10 +15,10 @@ namespace IRC_Client
     {
         private IRC irc;
         private string nickname, activeWindow;
-        private readonly char PREFIX = '/';
+        private readonly char COMMAND_PREFIX = '/';
         private List<string> windows = new List<string>() { "main" };
         private Dictionary<string, string> topics = new Dictionary<string, string>() { { "main", "Server Window" } };
-        public delegate void InvokeDelegate1(string arg);
+        public delegate void InvokeDelegateSingle(string arg);
         public delegate void InvokeDelegate(string arg, string arg2);
 
         public UI()
@@ -56,7 +56,7 @@ namespace IRC_Client
         public void Send(string input)
         {
             if (input == null) return;
-            if (input[0] == PREFIX)
+            if (input[0] == COMMAND_PREFIX)
             {
                 string[] tokens = input.Remove(0, 1).Split(' ');
                 switch (tokens[0])
@@ -120,7 +120,7 @@ namespace IRC_Client
             if (NoColon(e.tokens[0]).Substring(0, nickname.Length).Equals(nickname))
             {
                 windows.Add(channelName);
-                canvas.BeginInvoke(new InvokeDelegate1(MakeWindow), channelName);
+                canvas.BeginInvoke(new InvokeDelegateSingle(MakeWindow), channelName);
                 WriteLineA(channelName, $"<span class=\"info\">* You have joined #{channelName}</span>");
             }
             else
@@ -179,7 +179,7 @@ namespace IRC_Client
             if (windows.Contains(channelName))
             {
                 WriteLineA(channelName, $"<span class=\"chat_nick\">&lt;{NoColon(e.tokens[0]).Split('!')[0]}&gt;</span> {NoColon(string.Join(" ", e.tokens.Skip(3).ToArray()))}");
-                canvas.BeginInvoke(new InvokeDelegate1(ChannelListNotify), channelName);
+                canvas.BeginInvoke(new InvokeDelegateSingle(ChannelListNotify), channelName);
             }
         }
 
