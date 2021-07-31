@@ -19,7 +19,7 @@ namespace IRC_Client
         private List<string> windows = new List<string>() { "main" };
         private Dictionary<string, string> topics = new Dictionary<string, string>() { { "main", "Server Window" } };
         public delegate void InvokeDelegateSingle(string arg);
-        public delegate void InvokeDelegate(string arg, string arg2);
+        public delegate void InvokeDelegateDouble(string arg, string arg2);
 
         public UI()
         {
@@ -62,7 +62,7 @@ namespace IRC_Client
                 switch (tokens[0])
                 {
                     case "server":
-                        canvas.BeginInvoke(new InvokeDelegate(WriteLine), "main", $"<span class=\"info\">* Connecting to {tokens[1]}...</span>");
+                        canvas.BeginInvoke(new InvokeDelegateDouble(WriteLine), "main", $"<span class=\"info\">* Connecting to {tokens[1]}...</span>");
                         irc = new IRC();
                         AttachEvents();
                         irc.Connect(tokens[1], 6667, nickname);
@@ -128,7 +128,7 @@ namespace IRC_Client
                 {
                     string nick = NoColon(e.tokens[0]).Split('!')[0];
                     WriteLineA(channelName, $"<span class=\"info\">* {nick} has joined #{channelName}</span>");
-                    canvas.BeginInvoke(new InvokeDelegate(AddUserToList), channelName, nick);
+                    canvas.BeginInvoke(new InvokeDelegateDouble(AddUserToList), channelName, nick);
                 }
         }
 
@@ -138,7 +138,7 @@ namespace IRC_Client
             string reason = "";
             if (e.tokens[2] != null)
                 reason = NoColon(string.Join(" ", e.tokens.Skip(2).ToArray()));
-            canvas.BeginInvoke(new InvokeDelegate(QuittingUser), nick, reason);
+            canvas.BeginInvoke(new InvokeDelegateDouble(QuittingUser), nick, reason);
         }
 
         private void QuittingUser(string nick, string reason)
@@ -161,7 +161,7 @@ namespace IRC_Client
             if (nick.Equals(nickname))
                 WriteLineA(window, $"<span class=\"info\">* You have left #{window}</span>");
             else
-                canvas.BeginInvoke(new InvokeDelegate(OtherUserParted), nick, window);
+                canvas.BeginInvoke(new InvokeDelegateDouble(OtherUserParted), nick, window);
         }
 
         private void OtherUserParted(string nick, string window)
@@ -211,7 +211,7 @@ namespace IRC_Client
             {
                 e.tokens[5] = NoColon(e.tokens[5]);
                 foreach (string u in e.tokens.Skip(5).Where(x => !string.IsNullOrEmpty(x)).ToArray())
-                    canvas.BeginInvoke(new InvokeDelegate(AddUserToList), channelName, u);
+                    canvas.BeginInvoke(new InvokeDelegateDouble(AddUserToList), channelName, u);
             }
         }
 
@@ -231,7 +231,7 @@ namespace IRC_Client
 
         private void OnDisconnect(object sender, EventArgs e)
         {
-            canvas.BeginInvoke(new InvokeDelegate(WriteLine), "main", "<span class=\"info\">* DISCONNECTED</span>");
+            canvas.BeginInvoke(new InvokeDelegateDouble(WriteLine), "main", "<span class=\"info\">* DISCONNECTED</span>");
         }
 
         private void OnSocketException(object sender, TokenEventArgs e)
@@ -258,7 +258,7 @@ namespace IRC_Client
 
         private void WriteLineA(string window, string text)
         {
-            canvas.BeginInvoke(new InvokeDelegate(WriteLine), window, text);
+            canvas.BeginInvoke(new InvokeDelegateDouble(WriteLine), window, text);
         }
 
         private string FormatString(string[] input)
