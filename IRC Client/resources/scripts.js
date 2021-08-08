@@ -1,11 +1,11 @@
-﻿var cs = window.external;
+﻿var csharp = window.external;
 
 function send() {
     // Enter key pressed
     if (event.keyCode == 13) {
         var tmp = document.getElementById('textbox').value;
         document.getElementById('textbox').value = '';
-        cs.Send(tmp);
+        csharp.Send(tmp);
     }
 }
 function scroll() {
