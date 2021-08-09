@@ -38,7 +38,7 @@ namespace IRC_Client
             StreamReader reader = new StreamReader(stream);
             writer = new StreamWriter(stream);
             string inputLine;
-            writer.WriteLine("USER default 0 * :default");
+            writer.WriteLine($"USER {nickname} 0 * :{nickname}");
             writer.Flush();
             writer.WriteLine($"NICK {nickname}");
             writer.Flush();
