@@ -22,3 +22,4 @@ An IRC client made in C#. The goal of this project is to take an old protocol li
 * Ability to connect to multiple servers at once
 * More advanced settings dialog with saved options
 * Logging
+* SASL Authentication
