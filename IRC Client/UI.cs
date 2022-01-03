@@ -71,7 +71,9 @@ namespace IRC_Client
                         if (irc != null && irc.isConnected)
                         {
                             irc.Write(input.Remove(0, 1));
-                            Console.WriteLine("-> " + input);
+                            #if DEBUG
+                                Console.WriteLine("-> " + input);
+                            #endif
                         }
                         else
                         {
@@ -83,7 +85,9 @@ namespace IRC_Client
                         if (irc != null && irc.isConnected)
                         {
                             irc.Write(input.Remove(0, 1));
-                            Console.WriteLine("-> " + input);
+                            #if DEBUG
+                                Console.WriteLine("-> " + input);
+                            #endif
                         }
                         break;
                 }
@@ -94,7 +98,9 @@ namespace IRC_Client
                 {
                     irc.Write($"PRIVMSG #{activeWindow} :{input}");
                     WriteLine(activeWindow, $"<span class=\"chat_nick\">&lt;{nickname}&gt;</span> {input}");
-                    Console.WriteLine($"-> PRIVMSG #{activeWindow} :{input}");
+                    #if DEBUG
+                        Console.WriteLine($"-> PRIVMSG #{activeWindow} :{input}");
+                    #endif
                 }
             }
         }

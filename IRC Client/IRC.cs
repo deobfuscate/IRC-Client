@@ -46,13 +46,17 @@ namespace IRC_Client
             {
                 while (tcpclient.Connected && (inputLine = reader.ReadLine()) != null)
                 {
-                    Console.WriteLine("<- " + inputLine);
+                    #if DEBUG
+                        Console.WriteLine("<- " + inputLine);
+                    #endif
                     string[] tokens = inputLine.Split(new char[] { ' ' });
                     if (tokens.Length < 2) continue;
                     if (tokens[0] == "PING")
                     {
                         string key = tokens[1];
-                        Console.WriteLine("-> PONG " + key);
+                        #if DEBUG
+                            Console.WriteLine("-> PONG " + key);
+                        #endif
                         writer.WriteLine("PONG " + key);
                         writer.Flush();
                         continue;
