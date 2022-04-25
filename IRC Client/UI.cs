@@ -258,7 +258,8 @@ namespace IRC_Client
             canvas.Document.Write("\n");
             canvas.Document.GetElementById(window).AppendChild(tmp);
             //webBrowser1.Document.Window.ScrollTo(0, webBrowser1.Document.Body.ScrollRectangle.Height);
-            canvas.Document.InvokeScript("scroll");
+            if (window != null && window != "")
+                canvas.Document.InvokeScript("scroll", new string[] { window });
             canvas.Update();
         }
 

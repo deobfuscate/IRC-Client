@@ -8,8 +8,10 @@ function send() {
         csharp.Send(tmp);
     }
 }
-function scroll() {
-    //window.scrollTo(0, document.body.scrollHeight);
-    var objDiv = document.getElementById("main");
-    objDiv.scrollTop = objDiv.scrollHeight;
+
+function scroll(window) {
+    var objDiv = document.getElementById(window);
+    if (objDiv) {
+        objDiv.scrollTop = objDiv.scrollHeight;
+    }
 }
