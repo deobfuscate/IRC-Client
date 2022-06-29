@@ -272,7 +272,9 @@ namespace IRC_Client
         {
             string tmp = "";
             for (int i = 3; i < input.Length; i++)
+            {
                 tmp += " " + input[i];
+            }
             tmp = tmp.TrimStart();
             if (tmp[0] == ':') tmp = tmp.Remove(0, 1);  //remove ':'
             return tmp;
@@ -294,7 +296,9 @@ namespace IRC_Client
             foreach (HtmlElement el in canvas.Document.GetElementsByTagName("a"))
             {
                 if (el.Id != null && el.Id.Equals($"{windowName}_link"))
+                {
                     el.AttachEventHandler("onclick", (sender1, e1) => ClickEventHandler(el, EventArgs.Empty));
+                }
             }
 
             // close button
@@ -337,11 +341,15 @@ namespace IRC_Client
 
             // unread channel message notify
             if (!window.Equals("main") && canvas.Document.GetElementById($"{window}_link").GetAttribute("className").Contains("channels_unread"))
+            {
                 canvas.Document.GetElementById($"{window}_link").SetAttribute("className", "channel_link");
+            }
 
             // update topic
             if (topics.ContainsKey(window))
+            {
                 canvas.Document.GetElementById("topic").InnerHtml = (activeWindow.Equals("main")) ? topics[window] : $"#{window} | {topics[window]}";
+            }
             
         }
 
