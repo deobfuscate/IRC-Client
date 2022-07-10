@@ -11,8 +11,7 @@ using mshtml;
 namespace IRC_Client
 {
     [ComVisible(true)]
-    public partial class UI : Form
-    {
+    public partial class UI : Form {
         private IRC irc;
         private string nickname, activeWindow;
         private readonly char COMMAND_PREFIX = '/';
@@ -21,8 +20,7 @@ namespace IRC_Client
         public delegate void InvokeDelegateSingle(string arg);
         public delegate void InvokeDelegateDouble(string arg, string arg2);
 
-        public UI()
-        {
+        public UI() {
             UseLatestIEVersion();
             InitializeComponent();
             CheckForIllegalCrossThreadCalls = false;
@@ -53,14 +51,11 @@ namespace IRC_Client
             //webBrowser1.Document.Window.ScrollTo(0, webBrowser1.Document.Body.ScrollRectangle.Height);
         }
 
-        public void Send(string input)
-        {
+        public void Send(string input) {
             if (input == null) return;
-            if (input[0] == COMMAND_PREFIX)
-            {
+            if (input[0] == COMMAND_PREFIX) {
                 string[] tokens = input.Remove(0, 1).Split(' ');
-                switch (tokens[0])
-                {
+                switch (tokens[0]) {
                     case "server":
                         canvas.BeginInvoke(new InvokeDelegateDouble(WriteLine), "main", $"<span class=\"info\">* Connecting to {tokens[1]}...</span>");
                         irc = new IRC();
@@ -68,15 +63,13 @@ namespace IRC_Client
                         irc.Connect(tokens[1], 6667, nickname);
                         break;
                     case "nick":
-                        if (irc != null && irc.isConnected)
-                        {
+                        if (irc != null && irc.isConnected) {
                             irc.Write(input.Remove(0, 1));
                             #if DEBUG
                                 Console.WriteLine("-> " + input);
                             #endif
                         }
-                        else
-                        {
+                        else {
                             ChangeNick(tokens[1]);
                             WriteLineA("main", $"<span class=\"info\">* Your nickname is now {nickname}</span>");
                         }
@@ -92,10 +85,8 @@ namespace IRC_Client
                         break;
                 }
             }
-            else
-            {
-                if (irc != null && irc.isConnected && !activeWindow.Equals("main"))
-                {
+            else {
+                if (irc != null && irc.isConnected && !activeWindow.Equals("main")) {
                     irc.Write($"PRIVMSG #{activeWindow} :{input}");
                     WriteLine(activeWindow, $"<span class=\"chat_nick\">&lt;{nickname}&gt;</span> {input}");
                     #if DEBUG
@@ -106,32 +97,26 @@ namespace IRC_Client
         }
 
         // Events
-        private void OnNotice(object sender, TokenEventArgs e)
-        {
+        private void OnNotice(object sender, TokenEventArgs e) {
             WriteLineA("main", $"-<span class=\"notice_nick\">{e.tokens[0].Substring(1)}</span>- {FormatString(e.tokens)}");
         }
 
-        private void OnNick(object sender, TokenEventArgs e)
-        {
-            if (NoColon(e.tokens[0]).Substring(0, nickname.Length).Equals(nickname))
-            {
+        private void OnNick(object sender, TokenEventArgs e) {
+            if (NoColon(e.tokens[0]).Substring(0, nickname.Length).Equals(nickname)) {
                 ChangeNick(e.tokens[2]);
                 WriteLineA("main", $"<span class=\"info\">* Your nickname is now {nickname}</span>");
             }
         }
 
-        private void OnJoin(object sender, TokenEventArgs e)
-        {
+        private void OnJoin(object sender, TokenEventArgs e) {
             string channelName = NoColon(e.tokens[2]).Remove(0, 1); // rem #
-            if (NoColon(e.tokens[0]).Substring(0, nickname.Length).Equals(nickname))
-            {
+            if (NoColon(e.tokens[0]).Substring(0, nickname.Length).Equals(nickname)) {
                 windows.Add(channelName);
                 canvas.BeginInvoke(new InvokeDelegateSingle(MakeWindow), channelName);
                 WriteLineA(channelName, $"<span class=\"info\">* You have joined #{channelName}</span>");
             }
             else
-                if (windows.Contains(channelName))
-                {
+                if (windows.Contains(channelName)) {
                     string nick = NoColon(e.tokens[0]).Split('!')[0];
                     WriteLineA(channelName, $"<span class=\"info\">* {nick} has joined #{channelName}</span>");
                     canvas.BeginInvoke(new InvokeDelegateDouble(AddUserToList), channelName, nick);
@@ -142,16 +127,15 @@ namespace IRC_Client
         {
             string nick = NoColon(e.tokens[0]).Split('!')[0];
             string reason = "";
-            if (e.tokens[2] != null)
+            if (e.tokens[2] != null) {
                 reason = NoColon(string.Join(" ", e.tokens.Skip(2).ToArray()));
+            }
             canvas.BeginInvoke(new InvokeDelegateDouble(QuittingUser), nick, reason);
         }
 
-        private void QuittingUser(string nick, string reason)
-        {
+        private void QuittingUser(string nick, string reason) {
             foreach (string w in windows)
-                if (canvas.Document.GetElementById($"{w}_{nick}") != null)
-                {
+                if (canvas.Document.GetElementById($"{w}_{nick}") != null) {
                     RemoveById($"{w}_{nick}");
                     if (reason.Equals(""))
                         WriteLineA(w, $"<span class=\"info\">* {nick} has quit</span>");
@@ -160,8 +144,7 @@ namespace IRC_Client
                 }
         }
 
-        private void OnPart(object sender, TokenEventArgs e)
-        {
+        private void OnPart(object sender, TokenEventArgs e) {
             string nick = NoColon(e.tokens[0]).Split('!')[0];
             string window = e.tokens[2].Remove(0, 1);
             if (nick.Equals(nickname))
@@ -170,89 +153,73 @@ namespace IRC_Client
                 canvas.BeginInvoke(new InvokeDelegateDouble(OtherUserParted), nick, window);
         }
 
-        private void OtherUserParted(string nick, string window)
-        {
-            if (canvas.Document.GetElementById($"{window}_{nick}") != null)
-            {
+        private void OtherUserParted(string nick, string window) {
+            if (canvas.Document.GetElementById($"{window}_{nick}") != null) {
                 RemoveById($"{window}_{nick}");
                 WriteLineA(window, $"<span class=\"info\">* {nick} has left #{window}</span>");
             }
         }
 
-        private void OnPrivMsg(object sender, TokenEventArgs e)
-        {
+        private void OnPrivMsg(object sender, TokenEventArgs e) {
             string channelName = NoColon(e.tokens[2]).Remove(0, 1); // rem #
-            if (windows.Contains(channelName))
-            {
+            if (windows.Contains(channelName)) {
                 WriteLineA(channelName, $"<span class=\"chat_nick\">&lt;{NoColon(e.tokens[0]).Split('!')[0]}&gt;</span> {NoColon(string.Join(" ", e.tokens.Skip(3).ToArray()))}");
                 canvas.BeginInvoke(new InvokeDelegateSingle(ChannelListNotify), channelName);
             }
         }
 
-        private void ChannelListNotify(string channelName)
-        {
+        private void ChannelListNotify(string channelName) {
             string currentClass = canvas.Document.GetElementById($"{channelName}_link").GetAttribute("className");
             if (!activeWindow.Equals(channelName) && !currentClass.Contains("channels_unread"))
                 canvas.Document.GetElementById($"{channelName}_link").SetAttribute("className", currentClass + " channels_unread");
         }
 
-        private void OnMode(object sender, TokenEventArgs e)
-        {
+        private void OnMode(object sender, TokenEventArgs e) {
             if (e.tokens[2].Equals(nickname))
                 WriteLineA("main", $"<span class=\"info\">* {nickname} sets usermode {NoColon(e.tokens[3])}</span>");
             else
                 WriteLineA(e.tokens[2].Remove(0, 1), $"<span class=\"info\">* {NoColon(e.tokens[0]).Split('!')[0]} sets mode {string.Join(" ", e.tokens.Skip(3).ToArray())} for #{e.tokens[2].Remove(0, 1)}</span>");
-
         }
 
-        private void OnTopic(object sender, TokenEventArgs e)
-        {
+        private void OnTopic(object sender, TokenEventArgs e) {
             topics.Add(e.tokens[3].Remove(0, 1), NoColon(string.Join(" ", e.tokens.Skip(4).ToArray())));
         }
 
-        private void OnUser(object sender, TokenEventArgs e)
-        {
+        private void OnUser(object sender, TokenEventArgs e) {
             string channelName = e.tokens[4].Remove(0, 1);
-            if (windows.Contains(channelName))
-            {
+            if (windows.Contains(channelName)) {
                 e.tokens[5] = NoColon(e.tokens[5]);
                 foreach (string u in e.tokens.Skip(5).Where(x => !string.IsNullOrEmpty(x)).ToArray())
                     canvas.BeginInvoke(new InvokeDelegateDouble(AddUserToList), channelName, u);
             }
         }
 
-        private void AddUserToList(string channelName, string u)
-        {
+        private void AddUserToList(string channelName, string u) {
             HtmlElement userItem = canvas.Document.CreateElement("li");
             userItem.SetAttribute("id", $"{channelName}_{u}");
             userItem.InnerHtml = $"{u}";
             canvas.Document.GetElementById($"{channelName}_users_list").AppendChild(userItem);
         }
 
-        private void OnDefault(object sender, TokenEventArgs e)
-        {
+        private void OnDefault(object sender, TokenEventArgs e) {
             if (!new List<string>() { "470", "333", "328", "366" }.Contains(e.tokens[1]) && e.tokens.Length > 2)
                 WriteLineA("main", $"-<span class=\"notice_nick\">Server</span>- {FormatString(e.tokens)}");
         }
 
-        private void OnDisconnect(object sender, EventArgs e)
-        {
+        private void OnDisconnect(object sender, EventArgs e) {
             canvas.BeginInvoke(new InvokeDelegateDouble(WriteLine), "main", "<span class=\"info\">* DISCONNECTED</span>");
         }
 
-        private void OnSocketException(object sender, TokenEventArgs e)
-        {
+        private void OnSocketException(object sender, TokenEventArgs e) {
             WriteLineA(e.tokens[0], $"<span class=\"info\">* Could not connect: {e.tokens[1]}</span>");
         }
 
-        private void ChangeNick(string nick)
-        {
+        private void ChangeNick(string nick) {
             nickname = NoColon(nick);
             Text = $"IRC Client - {nickname}";
         }
 
-        private void WriteLine(string window, string text)
-        {
+        private void WriteLine(string window, string text) {
             HtmlElement tmp = canvas.Document.CreateElement("p");
             tmp.InnerHtml = text;
             canvas.Document.Write("\n");
@@ -263,16 +230,13 @@ namespace IRC_Client
             canvas.Update();
         }
 
-        private void WriteLineA(string window, string text)
-        {
+        private void WriteLineA(string window, string text) {
             canvas.BeginInvoke(new InvokeDelegateDouble(WriteLine), window, text);
         }
 
-        private string FormatString(string[] input)
-        {
+        private string FormatString(string[] input) {
             string tmp = "";
-            for (int i = 3; i < input.Length; i++)
-            {
+            for (int i = 3; i < input.Length; i++) {
                 tmp += " " + input[i];
             }
             tmp = tmp.TrimStart();
@@ -280,8 +244,7 @@ namespace IRC_Client
             return tmp;
         }
 
-        private void MakeWindow(string windowName)
-        {
+        private void MakeWindow(string windowName) {
             HtmlElement channelDiv = canvas.Document.CreateElement("div");
             channelDiv.SetAttribute("id", windowName);
             channelDiv.SetAttribute("className", "window");
@@ -293,10 +256,8 @@ namespace IRC_Client
             channelLink.SetAttribute("className", "channel_link");
             channelLink.InnerHtml = $"#{windowName}";
             canvas.Document.GetElementById("channel_list").AppendChild(channelLink);
-            foreach (HtmlElement el in canvas.Document.GetElementsByTagName("a"))
-            {
-                if (el.Id != null && el.Id.Equals($"{windowName}_link"))
-                {
+            foreach (HtmlElement el in canvas.Document.GetElementsByTagName("a")) {
+                if (el.Id != null && el.Id.Equals($"{windowName}_link")) {
                     el.AttachEventHandler("onclick", (sender1, e1) => ClickEventHandler(el, EventArgs.Empty));
                 }
             }
@@ -320,17 +281,14 @@ namespace IRC_Client
             SwitchTo(windowName);
         }
 
-        public void ClickEventHandler(object sender, EventArgs e)
-        {
+        public void ClickEventHandler(object sender, EventArgs e) {
             SwitchTo(((HtmlElement)sender).InnerHtml.Remove(0, 1));
         }
 
-        public void SwitchTo(string window)
-        {
+        public void SwitchTo(string window) {
             if (!windows.Contains(window)) return;
             
-            foreach (var w in windows)
-            {
+            foreach (var w in windows) {
                 canvas.Document.GetElementById(w).Style = "display:none";
                 canvas.Document.GetElementById($"{w}_users").Style = "display:none";
             }
@@ -340,33 +298,28 @@ namespace IRC_Client
             activeWindow = window;
 
             // unread channel message notify
-            if (!window.Equals("main") && canvas.Document.GetElementById($"{window}_link").GetAttribute("className").Contains("channels_unread"))
-            {
+            if (!window.Equals("main") && canvas.Document.GetElementById($"{window}_link").GetAttribute("className").Contains("channels_unread")) {
                 canvas.Document.GetElementById($"{window}_link").SetAttribute("className", "channel_link");
             }
 
             // update topic
-            if (topics.ContainsKey(window))
-            {
+            if (topics.ContainsKey(window)) {
                 canvas.Document.GetElementById("topic").InnerHtml = (activeWindow.Equals("main")) ? topics[window] : $"#{window} | {topics[window]}";
             }
             
         }
 
-        private string ReadEmbeddedFile(string file)
-        {
+        private string ReadEmbeddedFile(string file) {
             string result;
             using (Stream stream = Assembly.GetExecutingAssembly().GetManifestResourceStream($"IRC_Client.resources.{file}"))
-            using (StreamReader reader = new StreamReader(stream))
-            {
+            using (StreamReader reader = new StreamReader(stream)) {
                 result = reader.ReadToEnd();
                 reader.Close();
             }
             return result;
         }
 
-        private void AttachEvents()
-        {
+        private void AttachEvents() {
             irc.NoticeEvent += OnNotice;
             irc.NickEvent += OnNick;
             irc.JoinEvent += OnJoin;
@@ -387,8 +340,7 @@ namespace IRC_Client
         /// Forces WebBrowser control to use the latest version of Internet Explorer that is installed on current machine
         /// Source: https://stackoverflow.com/questions/17922308/use-latest-version-of-internet-explorer-in-the-webbrowser-control/34267121#34267121
         /// </summary>
-        private static void UseLatestIEVersion()
-        {
+        private static void UseLatestIEVersion() {
             int BrowserVer, RegVal;
 
             // get the installed IE version
@@ -413,34 +365,28 @@ namespace IRC_Client
                     Key.SetValue(System.Diagnostics.Process.GetCurrentProcess().ProcessName + ".exe", RegVal, RegistryValueKind.DWord);
         }
 
-        private void RemoveById(string id)
-        {
+        private void RemoveById(string id) {
             HTMLDocument tmp = (HTMLDocument)canvas.Document.DomDocument;
             IHTMLDOMNode node = tmp.getElementById(id) as IHTMLDOMNode;
             node.parentNode.removeChild(node);
         }
 
-        private IEnumerable<IHTMLDOMNode> GetElementsByClass(HTMLDocument doc, string className)
-        {
+        private IEnumerable<IHTMLDOMNode> GetElementsByClass(HTMLDocument doc, string className) {
             foreach (IHTMLDOMNode e in doc.all)
                 if (e.parentNode.attributes("className").Contains(className))
                     yield return e;
         }
 
-        private void Resized(object sender, EventArgs e)
-        {
-            try
-            {
+        private void Resized(object sender, EventArgs e) {
+            try {
                 if (canvas.Document != null) canvas.Document.InvokeScript("scroll");
             }
             catch { }
         }
 
         #if DEBUG
-        protected override bool ProcessCmdKey(ref Message msg, Keys keyData)
-        {
-            if (keyData == (Keys.F1)) // print entire HTML DOM document to console
-            {
+        protected override bool ProcessCmdKey(ref Message msg, Keys keyData) {
+            if (keyData == (Keys.F1)) { // print entire HTML DOM document to console
                 Console.WriteLine(canvas.Document.GetElementsByTagName("html")[0].InnerHtml);
                 return true;
             }
@@ -448,8 +394,7 @@ namespace IRC_Client
         }
         #endif
 
-        private new void Closing(object sender, FormClosingEventArgs e)
-        {
+        private new void Closing(object sender, FormClosingEventArgs e){
             Properties.Settings.Default.nick = nickname;
             Properties.Settings.Default.FormSize = Size;
             Properties.Settings.Default.Location = Location;
