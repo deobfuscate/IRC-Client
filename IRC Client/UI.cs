@@ -33,16 +33,19 @@ namespace IRC_Client
             canvas.Document.OpenNew(true);
             canvas.ObjectForScripting = this;
             canvas.Document.Write(ReadEmbeddedFile("ui.html"));
+
             // Load internal layout CSS file
             HtmlElement css = canvas.Document.CreateElement("style");
             css.InnerHtml = ReadEmbeddedFile("layout.css");
             canvas.Document.GetElementsByTagName("head")[0].AppendChild(css);
+
             // Load external user CSS file
             css = canvas.Document.CreateElement("link");
             css.SetAttribute("rel", "stylesheet");
             css.SetAttribute("type", "text/css");
             css.SetAttribute("href", $"file://{Directory.GetCurrentDirectory()}/styles.css");
             canvas.Document.GetElementsByTagName("head")[0].AppendChild(css);
+
             // Load internal JS file
             HtmlElement js = canvas.Document.CreateElement("script");
             js.InnerHtml = ReadEmbeddedFile("scripts.js");
@@ -282,7 +285,7 @@ namespace IRC_Client
         }
 
         public void ClickEventHandler(object sender, EventArgs e) {
-            SwitchTo(((HtmlElement)sender).InnerHtml.Remove(0, 1));
+            SwitchTo(((HtmlElement) sender).InnerHtml.Remove(0, 1));
         }
 
         public void SwitchTo(string window) {
