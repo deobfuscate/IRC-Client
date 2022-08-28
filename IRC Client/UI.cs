@@ -11,7 +11,8 @@ using mshtml;
 namespace IRC_Client
 {
     [ComVisible(true)]
-    public partial class UI : Form {
+    public partial class UI : Form
+    {
         private IRC irc;
         private string nickname, activeWindow;
         private readonly char COMMAND_PREFIX = '/';
@@ -68,9 +69,9 @@ namespace IRC_Client
                     case "nick":
                         if (irc != null && irc.isConnected) {
                             irc.Write(input.Remove(0, 1));
-                            #if DEBUG
-                                Console.WriteLine("-> " + input);
-                            #endif
+#if DEBUG
+                            Console.WriteLine("-> " + input);
+#endif
                         }
                         else {
                             ChangeNick(tokens[1]);
@@ -78,12 +79,11 @@ namespace IRC_Client
                         }
                         break;
                     default:
-                        if (irc != null && irc.isConnected)
-                        {
+                        if (irc != null && irc.isConnected) {
                             irc.Write(input.Remove(0, 1));
-                            #if DEBUG
-                                Console.WriteLine("-> " + input);
-                            #endif
+#if DEBUG
+                            Console.WriteLine("-> " + input);
+#endif
                         }
                         break;
                 }
@@ -92,9 +92,9 @@ namespace IRC_Client
                 if (irc != null && irc.isConnected && !activeWindow.Equals("main")) {
                     irc.Write($"PRIVMSG #{activeWindow} :{input}");
                     WriteLine(activeWindow, $"<span class=\"chat_nick\">&lt;{nickname}&gt;</span> {input}");
-                    #if DEBUG
-                        Console.WriteLine($"-> PRIVMSG #{activeWindow} :{input}");
-                    #endif
+#if DEBUG
+                    Console.WriteLine($"-> PRIVMSG #{activeWindow} :{input}");
+#endif
                 }
             }
         }
@@ -120,14 +120,13 @@ namespace IRC_Client
             }
             else
                 if (windows.Contains(channelName)) {
-                    string nick = NormalizeString(e.tokens[0]).Split('!')[0];
-                    WriteLineA(channelName, $"<span class=\"info\">* {nick} has joined #{channelName}</span>");
-                    canvas.BeginInvoke(new InvokeDelegateDouble(AddUserToList), channelName, nick);
-                }
+                string nick = NormalizeString(e.tokens[0]).Split('!')[0];
+                WriteLineA(channelName, $"<span class=\"info\">* {nick} has joined #{channelName}</span>");
+                canvas.BeginInvoke(new InvokeDelegateDouble(AddUserToList), channelName, nick);
+            }
         }
 
-        private void OnQuit(object sender, TokenEventArgs e)
-        {
+        private void OnQuit(object sender, TokenEventArgs e) {
             string nick = NormalizeString(e.tokens[0]).Split('!')[0];
             string reason = "";
             if (e.tokens[2] != null) {
@@ -285,12 +284,12 @@ namespace IRC_Client
         }
 
         public void ClickEventHandler(object sender, EventArgs e) {
-            SwitchTo(((HtmlElement) sender).InnerHtml.Remove(0, 1));
+            SwitchTo(((HtmlElement)sender).InnerHtml.Remove(0, 1));
         }
 
         public void SwitchTo(string window) {
             if (!windows.Contains(window)) return;
-            
+
             foreach (var w in windows) {
                 canvas.Document.GetElementById(w).Style = "display:none";
                 canvas.Document.GetElementById($"{w}_users").Style = "display:none";
@@ -309,7 +308,7 @@ namespace IRC_Client
             if (topics.ContainsKey(window)) {
                 canvas.Document.GetElementById("topic").InnerHtml = (activeWindow.Equals("main")) ? topics[window] : $"#{window} | {topics[window]}";
             }
-            
+
         }
 
         private string ReadEmbeddedFile(string file) {
@@ -387,7 +386,7 @@ namespace IRC_Client
             catch { }
         }
 
-        #if DEBUG
+#if DEBUG
         protected override bool ProcessCmdKey(ref Message msg, Keys keyData) {
             if (keyData == (Keys.F1)) { // print entire HTML DOM document to console
                 Console.WriteLine(canvas.Document.GetElementsByTagName("html")[0].OuterHtml);
@@ -395,9 +394,9 @@ namespace IRC_Client
             }
             return base.ProcessCmdKey(ref msg, keyData);
         }
-        #endif
+#endif
 
-        private new void Closing(object sender, FormClosingEventArgs e){
+        private new void Closing(object sender, FormClosingEventArgs e) {
             Properties.Settings.Default.nick = nickname;
             Properties.Settings.Default.FormSize = Size;
             Properties.Settings.Default.Location = Location;

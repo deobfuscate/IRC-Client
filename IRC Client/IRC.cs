@@ -10,25 +10,21 @@ namespace IRC_Client
         private StreamWriter writer;
         private string nickname;
 
-        public void Connect(string server, int port, string nickname)
-        {
+        public void Connect(string server, int port, string nickname) {
             this.nickname = nickname;
             TcpClient irc = new TcpClient();
             irc.BeginConnect(server, port, CallbackMethod, irc);
         }
 
-        private void CallbackMethod(IAsyncResult ar)
-        {
+        private void CallbackMethod(IAsyncResult ar) {
             isConnected = false;
             TcpClient tcpclient = ar.AsyncState as TcpClient;
 
             if (tcpclient.Client == null) return;
-            try
-            {
+            try {
                 tcpclient.EndConnect(ar);
             }
-            catch (SocketException ex)
-            {
+            catch (SocketException ex) {
                 RaiseSocketExceptionEvent(new TokenEventArgs(new string[] { "main", ex.Message }));
                 return;
             }
@@ -42,27 +38,23 @@ namespace IRC_Client
             writer.Flush();
             writer.WriteLine($"NICK {nickname}");
             writer.Flush();
-            while (true)
-            {
-                while (tcpclient.Connected && (inputLine = reader.ReadLine()) != null)
-                {
-                    #if DEBUG
-                        Console.WriteLine("<- " + inputLine);
-                    #endif
+            while (true) {
+                while (tcpclient.Connected && (inputLine = reader.ReadLine()) != null) {
+#if DEBUG
+                    Console.WriteLine("<- " + inputLine);
+#endif
                     string[] tokens = inputLine.Split(new char[] { ' ' });
                     if (tokens.Length < 2) continue;
-                    if (tokens[0] == "PING")
-                    {
+                    if (tokens[0] == "PING") {
                         string key = tokens[1];
-                        #if DEBUG
-                            Console.WriteLine("-> PONG " + key);
-                        #endif
+#if DEBUG
+                        Console.WriteLine("-> PONG " + key);
+#endif
                         writer.WriteLine("PONG " + key);
                         writer.Flush();
                         continue;
                     }
-                    switch (tokens[1])
-                    {
+                    switch (tokens[1]) {
                         /*case "001":
                             ChangeNick(tokens[2]);
                             break;*/
@@ -106,83 +98,70 @@ namespace IRC_Client
             }
         }
 
-        public void Write(string input)
-        {
+        public void Write(string input) {
             writer.WriteLine(input);
             writer.Flush();
         }
-        
+
         // Events
 
         public event EventHandler<TokenEventArgs> PrivMsgEvent;
-        protected virtual void RaisePrivMsgEvent(TokenEventArgs e)
-        {
+        protected virtual void RaisePrivMsgEvent(TokenEventArgs e) {
             PrivMsgEvent?.Invoke(this, e);
         }
 
         public event EventHandler<TokenEventArgs> NoticeEvent;
-        protected virtual void RaiseNoticeEvent(TokenEventArgs e)
-        {
+        protected virtual void RaiseNoticeEvent(TokenEventArgs e) {
             NoticeEvent?.Invoke(this, e);
         }
 
         public event EventHandler<TokenEventArgs> NickEvent;
-        protected virtual void RaiseNickEvent(TokenEventArgs e)
-        {
+        protected virtual void RaiseNickEvent(TokenEventArgs e) {
             NickEvent?.Invoke(this, e);
         }
 
         public event EventHandler<TokenEventArgs> JoinEvent;
-        protected virtual void RaiseJoinEvent(TokenEventArgs e)
-        {
+        protected virtual void RaiseJoinEvent(TokenEventArgs e) {
             JoinEvent?.Invoke(this, e);
         }
 
         public event EventHandler<TokenEventArgs> QuitEvent;
-        protected virtual void RaiseQuitEvent(TokenEventArgs e)
-        {
+        protected virtual void RaiseQuitEvent(TokenEventArgs e) {
             QuitEvent?.Invoke(this, e);
         }
 
         public event EventHandler<TokenEventArgs> TopicEvent;
-        protected virtual void RaiseTopicEvent(TokenEventArgs e)
-        {
+        protected virtual void RaiseTopicEvent(TokenEventArgs e) {
             TopicEvent?.Invoke(this, e);
         }
 
         public event EventHandler<TokenEventArgs> UserEvent;
-        protected virtual void RaiseUserEvent(TokenEventArgs e)
-        {
+        protected virtual void RaiseUserEvent(TokenEventArgs e) {
             UserEvent?.Invoke(this, e);
         }
 
         public event EventHandler<TokenEventArgs> DefaultEvent;
-        protected virtual void RaiseDefaultEvent(TokenEventArgs e)
-        {
+        protected virtual void RaiseDefaultEvent(TokenEventArgs e) {
             DefaultEvent?.Invoke(this, e);
         }
 
         public event EventHandler<TokenEventArgs> PartEvent;
-        protected virtual void RaisePartEvent(TokenEventArgs e)
-        {
+        protected virtual void RaisePartEvent(TokenEventArgs e) {
             PartEvent?.Invoke(this, e);
         }
 
         public event EventHandler<TokenEventArgs> ModeEvent;
-        protected virtual void RaiseModeEvent(TokenEventArgs e)
-        {
+        protected virtual void RaiseModeEvent(TokenEventArgs e) {
             ModeEvent?.Invoke(this, e);
         }
 
         public event EventHandler<TokenEventArgs> SocketExceptionEvent;
-        protected virtual void RaiseSocketExceptionEvent(TokenEventArgs e)
-        {
+        protected virtual void RaiseSocketExceptionEvent(TokenEventArgs e) {
             SocketExceptionEvent?.Invoke(this, e);
         }
-        
+
         public event EventHandler DisconnectEvent;
-        protected virtual void RaiseDisconnectEvent(EventArgs e)
-        {
+        protected virtual void RaiseDisconnectEvent(EventArgs e) {
             DisconnectEvent?.Invoke(this, e);
         }
     }
@@ -191,8 +170,7 @@ namespace IRC_Client
     {
         public string[] tokens;
 
-        public TokenEventArgs(string[] tokens)
-        {
+        public TokenEventArgs(string[] tokens) {
             this.tokens = tokens;
         }
     }
