@@ -2,10 +2,8 @@
 using System.IO;
 using System.Net.Sockets;
 
-namespace IRC_Client
-{
-    class IRC
-    {
+namespace IRC_Client {
+    class IRC {
         public bool isConnected = false;
         private StreamWriter writer;
         private string nickname;
