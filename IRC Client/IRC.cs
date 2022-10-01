@@ -164,8 +164,7 @@ namespace IRC_Client {
         }
     }
 
-    public class TokenEventArgs : EventArgs
-    {
+    public class TokenEventArgs : EventArgs {
         public string[] tokens;
 
         public TokenEventArgs(string[] tokens) {
