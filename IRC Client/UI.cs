@@ -8,11 +8,9 @@ using System.Windows.Forms;
 using Microsoft.Win32;
 using mshtml;
 
-namespace IRC_Client
-{
+namespace IRC_Client {
     [ComVisible(true)]
-    public partial class UI : Form
-    {
+    public partial class UI : Form {
         private IRC irc;
         private string nickname, activeWindow;
         private readonly char COMMAND_PREFIX = '/';
