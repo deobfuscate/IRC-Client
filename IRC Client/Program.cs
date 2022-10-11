@@ -1,10 +1,8 @@
 ﻿using System;
 using System.Windows.Forms;
 
-namespace IRC_Client
-{
-    static class Program
-    {
+namespace IRC_Client {
+    static class Program {
         /// <summary>
         /// The main entry point for the application.
         /// </summary>
