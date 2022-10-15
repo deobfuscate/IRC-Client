@@ -56,7 +56,6 @@
       <DependentUpon>UI.cs</DependentUpon>
     </Compile>
     <Compile Include="IRC.cs" />
-    <Compile Include="Program.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
     <EmbeddedResource Include="UI.resx">
       <DependentUpon>UI.cs</DependentUpon>
