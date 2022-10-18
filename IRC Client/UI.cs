@@ -403,11 +403,7 @@ namespace IRC_Client {
         }
     }
 
-    static class Program
-    {
-        /// <summary>
-        /// The main entry point for the application.
-        /// </summary>
+    static class Program {
         [STAThread]
         static void Main() {
             Application.EnableVisualStyles();
