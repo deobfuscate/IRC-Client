@@ -25,8 +25,9 @@ namespace IRC_Client {
             CheckForIllegalCrossThreadCalls = false;
             Size = Properties.Settings.Default.FormSize;
             WindowState = Properties.Settings.Default.WindowState;
-            if (!File.Exists("styles.css"))
+            if (!File.Exists("styles.css")) {
                 File.WriteAllText("styles.css", ReadEmbeddedFile("default_styles.css"));
+            }
             ChangeNick(Properties.Settings.Default.nick);
             canvas.DocumentText = "0";
             canvas.Document.OpenNew(true);
@@ -67,9 +68,9 @@ namespace IRC_Client {
                     case "nick":
                         if (irc != null && irc.isConnected) {
                             irc.Write(input.Remove(0, 1));
-#if DEBUG
-                            Console.WriteLine("-> " + input);
-#endif
+                            #if DEBUG
+                                Console.WriteLine("-> " + input);
+                            #endif
                         }
                         else {
                             ChangeNick(tokens[1]);
@@ -79,9 +80,9 @@ namespace IRC_Client {
                     default:
                         if (irc != null && irc.isConnected) {
                             irc.Write(input.Remove(0, 1));
-#if DEBUG
-                            Console.WriteLine("-> " + input);
-#endif
+                            #if DEBUG
+                                Console.WriteLine("-> " + input);
+                            #endif
                         }
                         break;
                 }
@@ -90,9 +91,9 @@ namespace IRC_Client {
                 if (irc != null && irc.isConnected && !activeWindow.Equals("main")) {
                     irc.Write($"PRIVMSG #{activeWindow} :{input}");
                     WriteLine(activeWindow, $"<span class=\"chat_nick\">&lt;{nickname}&gt;</span> {input}");
-#if DEBUG
-                    Console.WriteLine($"-> PRIVMSG #{activeWindow} :{input}");
-#endif
+                    #if DEBUG
+                        Console.WriteLine($"-> PRIVMSG #{activeWindow} :{input}");
+                    #endif
                 }
             }
         }
@@ -384,15 +385,15 @@ namespace IRC_Client {
             catch { }
         }
 
-#if DEBUG
-        protected override bool ProcessCmdKey(ref Message msg, Keys keyData) {
-            if (keyData == (Keys.F1)) { // print entire HTML DOM document to console
-                Console.WriteLine(canvas.Document.GetElementsByTagName("html")[0].OuterHtml);
-                return true;
+        #if DEBUG
+            protected override bool ProcessCmdKey(ref Message msg, Keys keyData) {
+                if (keyData == (Keys.F1)) { // print entire HTML DOM document to console
+                    Console.WriteLine(canvas.Document.GetElementsByTagName("html")[0].OuterHtml);
+                    return true;
+                }
+                return base.ProcessCmdKey(ref msg, keyData);
             }
-            return base.ProcessCmdKey(ref msg, keyData);
-        }
-#endif
+        #endif
 
         private new void Closing(object sender, FormClosingEventArgs e) {
             Properties.Settings.Default.nick = nickname;
