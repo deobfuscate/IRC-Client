@@ -379,10 +379,12 @@ namespace IRC_Client {
         }
 
         private void Resized(object sender, EventArgs e) {
-            try {
-                if (canvas.Document != null) canvas.Document.InvokeScript("scroll");
+            if (canvas.Document != null) {
+                try {
+                    canvas.Document.InvokeScript("scroll");
+                }
+                catch { }
             }
-            catch { }
         }
 
         #if DEBUG
