@@ -14,13 +14,13 @@ namespace IRC_Client {
             irc.BeginConnect(server, port, CallbackMethod, irc);
         }
 
-        private void CallbackMethod(IAsyncResult ar) {
+        private void CallbackMethod(IAsyncResult result) {
             isConnected = false;
-            TcpClient tcpclient = ar.AsyncState as TcpClient;
+            TcpClient tcpclient = result.AsyncState as TcpClient;
 
             if (tcpclient.Client == null) return;
             try {
-                tcpclient.EndConnect(ar);
+                tcpclient.EndConnect(result);
             }
             catch (SocketException ex) {
                 RaiseSocketExceptionEvent(new TokenEventArgs(new string[] { "main", ex.Message }));
@@ -38,16 +38,16 @@ namespace IRC_Client {
             writer.Flush();
             while (true) {
                 while (tcpclient.Connected && (inputLine = reader.ReadLine()) != null) {
-#if DEBUG
-                    Console.WriteLine("<- " + inputLine);
-#endif
+                    #if DEBUG
+                        Console.WriteLine("<- " + inputLine);
+                    #endif
                     string[] tokens = inputLine.Split(new char[] { ' ' });
                     if (tokens.Length < 2) continue;
                     if (tokens[0] == "PING") {
                         string key = tokens[1];
-#if DEBUG
-                        Console.WriteLine("-> PONG " + key);
-#endif
+                        #if DEBUG
+                            Console.WriteLine("-> PONG " + key);
+                        #endif
                         writer.WriteLine("PONG " + key);
                         writer.Flush();
                         continue;
@@ -102,7 +102,6 @@ namespace IRC_Client {
         }
 
         // Events
-
         public event EventHandler<TokenEventArgs> PrivMsgEvent;
         protected virtual void RaisePrivMsgEvent(TokenEventArgs e) {
             PrivMsgEvent?.Invoke(this, e);
