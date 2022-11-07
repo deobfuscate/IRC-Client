@@ -6,10 +6,10 @@ namespace IRC_Client {
     class IRC {
         public bool isConnected = false;
         private StreamWriter writer;
-        private string nickname;
+        private string nick;
 
         public void Connect(string server, int port, string nickname) {
-            this.nickname = nickname;
+            nick = nickname;
             TcpClient irc = new TcpClient();
             irc.BeginConnect(server, port, CallbackMethod, irc);
         }
@@ -32,9 +32,9 @@ namespace IRC_Client {
             StreamReader reader = new StreamReader(stream);
             writer = new StreamWriter(stream);
             string inputLine;
-            writer.WriteLine($"USER {nickname} 0 * :{nickname}");
+            writer.WriteLine($"USER {nick} 0 * :{nick}");
             writer.Flush();
-            writer.WriteLine($"NICK {nickname}");
+            writer.WriteLine($"NICK {nick}");
             writer.Flush();
             while (true) {
                 while (tcpclient.Connected && (inputLine = reader.ReadLine()) != null) {
@@ -46,9 +46,9 @@ namespace IRC_Client {
                     if (tokens[0] == "PING") {
                         string key = tokens[1];
                         #if DEBUG
-                            Console.WriteLine("-> PONG " + key);
+                            Console.WriteLine($"-> PONG {key}");
                         #endif
-                        writer.WriteLine("PONG " + key);
+                        writer.WriteLine($"PONG {key}");
                         writer.Flush();
                         continue;
                     }
