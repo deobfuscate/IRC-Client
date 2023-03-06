@@ -69,7 +69,7 @@ namespace IRC_Client {
                         if (irc != null && irc.isConnected) {
                             irc.Write(input.Remove(0, 1));
                             #if DEBUG
-                                Console.WriteLine("-> " + input);
+                            Console.WriteLine("-> " + input);
                             #endif
                         }
                         else {
@@ -81,7 +81,7 @@ namespace IRC_Client {
                         if (irc != null && irc.isConnected) {
                             irc.Write(input.Remove(0, 1));
                             #if DEBUG
-                                Console.WriteLine("-> " + input);
+                            Console.WriteLine("-> " + input);
                             #endif
                         }
                         break;
@@ -92,7 +92,7 @@ namespace IRC_Client {
                     irc.Write($"PRIVMSG #{activeWindow} :{input}");
                     WriteLine(activeWindow, $"<span class=\"chat_nick\">&lt;{nickname}&gt;</span> {input}");
                     #if DEBUG
-                        Console.WriteLine($"-> PRIVMSG #{activeWindow} :{input}");
+                    Console.WriteLine($"-> PRIVMSG #{activeWindow} :{input}");
                     #endif
                 }
             }
@@ -289,9 +289,9 @@ namespace IRC_Client {
         public void SwitchTo(string window) {
             if (!windows.Contains(window)) return;
 
-            foreach (var w in windows) {
-                canvas.Document.GetElementById(w).Style = "display:none";
-                canvas.Document.GetElementById($"{w}_users").Style = "display:none";
+            foreach (var activeWindow in windows) {
+                canvas.Document.GetElementById(activeWindow).Style = "display:none";
+                canvas.Document.GetElementById($"{activeWindow}_users").Style = "display:none";
             }
             canvas.Document.GetElementById(window).Style = "display:block";
             canvas.Document.GetElementById($"{window}_users").Style = "display:block";
@@ -388,13 +388,13 @@ namespace IRC_Client {
         }
 
         #if DEBUG
-            protected override bool ProcessCmdKey(ref Message msg, Keys keyData) {
-                if (keyData == (Keys.F1)) { // print entire HTML DOM document to console
-                    Console.WriteLine(canvas.Document.GetElementsByTagName("html")[0].OuterHtml);
-                    return true;
-                }
-                return base.ProcessCmdKey(ref msg, keyData);
+        protected override bool ProcessCmdKey(ref Message msg, Keys keyData) {
+            if (keyData == (Keys.F1)) { // print entire HTML DOM document to console
+                Console.WriteLine(canvas.Document.GetElementsByTagName("html")[0].OuterHtml);
+                return true;
             }
+            return base.ProcessCmdKey(ref msg, keyData);
+        }
         #endif
 
         private new void Closing(object sender, FormClosingEventArgs e) {
