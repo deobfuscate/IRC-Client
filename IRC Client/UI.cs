@@ -17,7 +17,7 @@ namespace IRC_Client {
         private List<string> windows = new List<string>() { "main" };
         private Dictionary<string, string> topics = new Dictionary<string, string>() { { "main", "Server Window" } };
         public delegate void InvokeDelegateSingle(string arg);
-        public delegate void InvokeDelegateDouble(string arg, string arg2);
+        public delegate void InvokeDelegateDouble(string arg1, string arg2);
 
         public UI() {
             UseLatestIEVersion();
@@ -307,7 +307,6 @@ namespace IRC_Client {
             if (topics.ContainsKey(window)) {
                 canvas.Document.GetElementById("topic").InnerHtml = (activeWindow.Equals("main")) ? topics[window] : $"#{window} | {topics[window]}";
             }
-
         }
 
         private string ReadEmbeddedFile(string file) {
